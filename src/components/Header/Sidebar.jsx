@@ -22,8 +22,8 @@ const Sidebar = () => {
       <div className="navbar-wrapper">
         <div className="m-header">
           <Link to="/" className="b-brand">
-            <img src="/assets/images/logo-full.png" alt="" className="logo logo-lg" />
-            <img src="/assets/images/logo-abbr.png" alt="" className="logo logo-sm" />
+            {/* <img src="/assets/images/logo-full.png" alt="" className="logo logo-lg" />
+            <img src="/assets/images/logo-abbr.png" alt="" className="logo logo-sm" /> */}
           </Link>
         </div>
         <div className="navbar-content">
