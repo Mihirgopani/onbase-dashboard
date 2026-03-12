@@ -15,7 +15,7 @@ const AddWorker = () => {
     const [formData, setFormData] = useState({
         name: '', email: '', phone_number: '', alt_number: '', address: '', city: '',
         role: 'worker', language: 'hindi', category: 'construction',
-        work_type: '', team_status: 'no', status: 'active',
+        work_type: 'construction', team_status: 'no', status: 'active',
         experience: '', work_area: '',
         payment_details: { bank_name: '', bank_account_number: '', bank_ifsc: '', account_holder_name: '', upi_id: '', gpay_number: '' },
         team_members: [], 
@@ -46,11 +46,17 @@ const AddWorker = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // Clean payload: ensure work_type is set to the first selected service
-            const finalPayload = {
-                ...formData,
-                work_type: formData.team_members.length > 0 ? formData.team_members[0].type : formData.work_type
-            };
+            const finalPayload = { ...formData };
+            
+            // Map Category to work_type
+            if (finalPayload.category === "houseHelpers") {
+                finalPayload.work_type = "house help";
+            } else if (finalPayload.category === "construction") {
+                finalPayload.work_type = "construction";
+            } else if (finalPayload.category === "industrial") {
+                finalPayload.work_type = "industry";
+            }
+
             await api.post('/workers', finalPayload);
             navigate('/workers');
         } catch (err) {

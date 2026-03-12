@@ -55,10 +55,28 @@ const EditWorker = () => {
     const handleUpdate = async (e) => {
         e.preventDefault();
         try {
-            await api.put(`/workers/${id}`, formData);
+            // 1. Strip immutable fields and metadata
+            const { _id, createdAt, updatedAt, __v, role, ...cleanData } = formData;
+    
+            // 2. Map Category to work_type for Database Consistency
+            if (cleanData.category === "houseHelpers") {
+                cleanData.work_type = "house help";
+            } else if (cleanData.category === "construction") {
+                cleanData.work_type = "construction";
+            } else if (cleanData.category === "industrial") {
+                cleanData.work_type = "industry";
+            }
+
+            // 3. Clean document IDs to prevent sub-document key collisions
+            if (cleanData.documents) {
+                cleanData.documents = cleanData.documents.map(({ _id, ...doc }) => doc);
+            }
+    
+            await api.put(`/workers/${id}`, cleanData);
             navigate(`/workers/details/${id}`);
         } catch (err) {
-            alert("Error updating profile");
+            console.error("Update Error:", err.response?.data || err.message);
+            alert(`Failed: ${err.response?.data?.message || "Error updating profile"}`);
         }
     };
 
@@ -104,7 +122,7 @@ const EditWorker = () => {
                             <div className="card-body">
                                 <div className="mb-3">
                                     <label className="fw-bold">Category</label>
-                                    <select className="form-select" value={formData.category} 
+                                    <select className="form-select border-primary" value={formData.category} 
                                         onChange={e => setFormData({...formData, category: e.target.value, team_members: [], team_status: e.target.value === 'houseHelpers' ? 'no' : formData.team_status})}>
                                         <option value="construction">Construction</option>
                                         <option value="industrial">Industrial</option>

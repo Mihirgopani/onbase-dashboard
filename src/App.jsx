@@ -39,6 +39,12 @@ import AllBookings from "./views/bookings/AllBookings";
 import AddBooking from "./views/bookings/AddBooking";
 import EditBooking from "./views/bookings/EditBooking";
 
+import GlobalSetting from "./views/pages/Settings";
+import AllStates from "./views/locations/AllStates";
+import AllCities from "./views/locations/AllCities";
+import AllAreas from "./views/locations/AllAreas";
+import DumpData from "./views/pages/DumpData";
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
 
@@ -107,6 +113,12 @@ function App() {
                       <Route path="/admins/add" element={<AddAdmin />} />
                       <Route path="/admins/edit/:id" element={<EditAdmin />} />
                       <Route path="/admins/details/:id" element={<AdminDetails />} />
+                      <Route path="/settings/global-setting" element={<GlobalSetting />} />
+                      <Route path="/settings/dump-data" element={<DumpData />} />
+
+                      <Route path="/locations/states" element={<AllStates />} />
+<Route path="/locations/cities" element={<AllCities />} />
+<Route path="/locations/areas" element={<AllAreas />} />
 
                       <Route path="/bookings" element={<AllBookings />} />
 <Route path="/bookings/add" element={<AddBooking />} />

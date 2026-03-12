@@ -98,7 +98,7 @@ const Sidebar = () => {
 
             {/* Settings / Admin Section */}
             <li className="nxl-item nxl-caption"><label>Settings</label></li>
-            
+
             <li className="nxl-item nxl-hasmenu">
               <a href="javascript:void(0);" className="nxl-link">
                 <span className="nxl-micon"><i className="feather-shield"></i></span>
@@ -118,6 +118,33 @@ const Sidebar = () => {
               </Link>
             </li>
 
+            <li className="nxl-item">
+              <Link to="/settings/global-setting" className="nxl-link">
+                <span className="nxl-micon"><i className="feather-activity"></i></span>
+                <span className="nxl-mtext">Global Settings</span>
+              </Link>
+            </li>
+
+             {/* Manage Locations Section */}
+             <li className="nxl-item nxl-hasmenu">
+              <a href="javascript:void(0);" className="nxl-link">
+                <span className="nxl-micon"><i className="feather-map-pin"></i></span>
+                <span className="nxl-mtext">Locations</span><span className="nxl-arrow"><i className="feather-chevron-right"></i></span>
+              </a>
+              <ul className="nxl-submenu">
+                <li className="nxl-item"><Link className="nxl-link" to="/locations/states">States</Link></li>
+                <li className="nxl-item"><Link className="nxl-link" to="/locations/cities">Cities</Link></li>
+                <li className="nxl-item"><Link className="nxl-link" to="/locations/areas">Areas & Bulk Upload</Link></li>
+              </ul>
+            </li>
+
+            <li className="nxl-item">
+              <Link to="/settings/dump-data" className="nxl-link">
+                <span className="nxl-micon"><i className="feather-trash-2"></i></span>
+                <span className="nxl-mtext">Dump Data</span>
+              </Link>
+            </li>
+
             {/* Logout Button */}
             <li className="nxl-item mt-4">
               <a href="javascript:void(0);" className="nxl-link text-danger" onClick={handleLogout}>
@@ -125,6 +152,8 @@ const Sidebar = () => {
                 <span className="nxl-mtext">Logout</span>
               </a>
             </li>
+
+           
           </ul>
         </div>
       </div>

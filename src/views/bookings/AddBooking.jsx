@@ -12,7 +12,16 @@ const AddBooking = () => {
     const [selectedClientId, setSelectedClientId] = useState('');
     const [cart, setCart] = useState([]);
     const [notes, setNotes] = useState('');
-    const [address, setAddress] = useState({ label: 'Home', address: '' });
+    
+    // Aligned with your service_address object structure
+    const [address, setAddress] = useState({
+        name: '',
+        phone: '',
+        houseDetails: '',
+        street: '',
+        city: '',
+        pincode: ''
+    });
 
     // Temporary state for the "Current Job" being added
     const [tempJob, setTempJob] = useState({
@@ -21,8 +30,8 @@ const AddBooking = () => {
         worker_count: 1,
         date_type: 'single',
         start_date: '',
-        end_date: '',
-        time_slot: { start: '09:00', end: '18:00' }
+        startTime: '09:00 AM',
+        endTime: '05:00 PM'
     });
 
     useEffect(() => {
@@ -30,7 +39,7 @@ const AddBooking = () => {
             try {
                 const [cRes, catRes, jRes] = await Promise.all([
                     api.get('/clients'),
-                    api.get('/job-categories'), // Changed from /categories
+                    api.get('/job-categories'),
                     api.get('/jobs')
                 ]);
                 setClients(cRes.data);
@@ -38,45 +47,104 @@ const AddBooking = () => {
                 setAllJobs(jRes.data);
             } catch (err) {
                 console.error("Error loading booking data:", err);
-                alert("Failed to load clients or categories. Please check backend connection.");
             }
         };
         fetchData();
     }, []);
 
-    const addToCart = () => {
-        if (!tempJob.job_id || !tempJob.start_date) return alert("Please fill job details");
-        const jobData = allJobs.find(j => j._id === tempJob.job_id);
-        setCart([...cart, { ...tempJob, jobName: jobData.name }]);
-        // Reset temp job
-        setTempJob({ ...tempJob, job_id: '', worker_count: 1 });
+    // Auto-fill address details when client is selected
+    const handleClientChange = (clientId) => {
+        setSelectedClientId(clientId);
+        const client = clients.find(c => c._id === clientId);
+        if (client) {
+            setAddress(prev => ({
+                ...prev,
+                name: client.name,
+                phone: client.phone_number
+            }));
+        }
     };
 
-    const removeFromCart = (index) => {
-        setCart(cart.filter((_, i) => i !== index));
+    const addToCart = () => {
+        if (!tempJob.job_id || !tempJob.start_date) return alert("Please fill job details");
+        
+        const jobData = allJobs.find(j => j._id === tempJob.job_id);
+        
+        // Calculate item price
+        const pricePerUnit = jobData.price || 1000;
+        const totalItemPrice = pricePerUnit * tempJob.worker_count;
+
+        const newItem = {
+            worker_type: jobData.jobName,
+            price_per_unit: pricePerUnit,
+            hours: 8, // Defaulting to standard shift
+            status: "Pending",
+            otp: Math.floor(1000 + Math.random() * 9000).toString(),
+            assigned_worker: null,
+            // UI helper fields
+            job_id: tempJob.job_id,
+            start_date: tempJob.start_date,
+            worker_count: tempJob.worker_count
+        };
+
+        setCart([...cart, newItem]);
+        // Reset job selection but keep date for convenience
+        setTempJob({ ...tempJob, job_id: '' });
+    };
+
+    const calculateTotal = () => {
+        return cart.reduce((sum, item) => sum + (item.price_per_unit * item.worker_count), 0);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (cart.length === 0) return alert("Add at least one job");
-
-        const bookingData = {
-            client_id: selectedClientId,
-            cart_items: cart,
-            service_address: address,
-            total_amount: 0, // In a real app, calculate based on job prices
-            order_notes: notes,
-            payment_mode: 'COD'
+        if (!address.city || !address.street) return alert("Please fill address details");
+    
+        // 1. Transform your Dashboard 'cart' to match Backend 'cart' expectations
+        // The backend wants: item.title, item.price, item.quantity
+        const formattedCart = cart.map(item => ({
+            title: item.worker_type, // Backend uses item.title
+            price: item.price_per_unit, // Backend uses item.price
+            quantity: item.worker_count, // Backend loops over item.quantity
+            hours: item.hours || 8
+        }));
+    
+        // 2. Prepare the payload keys exactly as the backend deconstructs them:
+        // const { cart, address, selectedSlot, totalAmount } = req.body;
+        const bookingPayload = {
+            cart: formattedCart,
+            address: address, // Matches backend 'address'
+            selectedSlot: {
+                type: tempJob.date_type, // Backend uses selectedSlot.type
+                date: tempJob.start_date,
+                startDate: tempJob.start_date, // Ensuring both are sent for safety
+                endDate: tempJob.end_date || tempJob.start_date,
+                days: tempJob.date_type === 'range' ? calculateDays(tempJob.start_date, tempJob.end_date) : 1,
+                startTime: tempJob.startTime,
+                endTime: tempJob.endTime
+            },
+            totalAmount: calculateTotal() // Matches backend 'totalAmount'
         };
-
+    
         try {
-            await api.post('/bookings', bookingData);
+            // Note: Make sure your API call includes the auth token 
+            // because backend uses req.user.id
+            await api.post('/bookings', bookingPayload);
             alert("Booking created successfully!");
             navigate('/bookings');
         } catch (err) {
-            console.error(err);
-            alert("Error creating booking");
+            console.error("Payload sent:", bookingPayload);
+            console.error("Error Response:", err.response?.data);
+            alert(err.response?.data?.message || "Error creating booking");
         }
+    };
+    
+    // Helper to calculate days if range is selected
+    const calculateDays = (start, end) => {
+        if (!start || !end) return 1;
+        const diffTime = Math.abs(new Date(end) - new Date(start));
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
     };
 
     return (
@@ -87,94 +155,71 @@ const AddBooking = () => {
 
             <div className="row p-4">
                 <div className="col-lg-8">
-                    <div className="card shadow-sm mb-4">
-                        <div className="card-header"><h5>1. Select Client & Location</h5></div>
+                    {/* 1. Client & Location */}
+                    <div className="card shadow-sm border-0 mb-4">
+                        <div className="card-header bg-white py-3"><h5>1. Select Client & Location</h5></div>
                         <div className="card-body">
                             <div className="row">
-                                <div className="col-md-6 mb-3">
-                                    <label className="form-label">Client</label>
-                                    <select className="form-select" onChange={e => setSelectedClientId(e.target.value)} required>
+                                <div className="col-md-12 mb-3">
+                                    <label className="form-label small fw-bold">Client</label>
+                                    <select className="form-select" value={selectedClientId} onChange={e => handleClientChange(e.target.value)} required>
                                         <option value="">Choose Client...</option>
                                         {clients.map(c => <option key={c._id} value={c._id}>{c.name} ({c.phone_number})</option>)}
                                     </select>
                                 </div>
+                                <div className="col-md-4 mb-3">
+                                    <label className="form-label small">House/Flat No</label>
+                                    <input type="text" className="form-control" value={address.houseDetails} onChange={e => setAddress({...address, houseDetails: e.target.value})} />
+                                </div>
+                                <div className="col-md-8 mb-3">
+                                    <label className="form-label small">Street/Area</label>
+                                    <input type="text" className="form-control" value={address.street} onChange={e => setAddress({...address, street: e.target.value})} />
+                                </div>
                                 <div className="col-md-6 mb-3">
-                                    <label className="form-label">Service Address</label>
-                                    <input type="text" className="form-control" placeholder="House No, Street, City" 
-                                        onChange={e => setAddress({...address, address: e.target.value})} />
+                                    <label className="form-label small">City</label>
+                                    <input type="text" className="form-control" value={address.city} onChange={e => setAddress({...address, city: e.target.value})} />
+                                </div>
+                                <div className="col-md-6 mb-3">
+                                    <label className="form-label small">Pincode</label>
+                                    <input type="text" className="form-control" value={address.pincode} onChange={e => setAddress({...address, pincode: e.target.value})} />
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="card shadow-sm mb-4">
-                        <div className="card-header"><h5>2. Add Jobs to Booking</h5></div>
+                    {/* 2. Add Jobs */}
+                    <div className="card shadow-sm border-0 mb-4">
+                        <div className="card-header bg-white py-3"><h5>2. Add Jobs to Booking</h5></div>
                         <div className="card-body">
                             <div className="row g-3">
-                                <div className="col-md-4">
-                                    <label className="small">Category</label>
+                                <div className="col-md-6">
+                                    <label className="small fw-bold">Category</label>
                                     <select className="form-select" onChange={e => setTempJob({...tempJob, category_id: e.target.value})}>
                                         <option value="">Select Category</option>
                                         {categories.map(cat => <option key={cat._id} value={cat._id}>{cat.name}</option>)}
                                     </select>
                                 </div>
-                                {/* Specific Job Dropdown */}
-<div className="col-md-4">
-    <label className="small">Specific Job</label>
-    <select 
-        className="form-select" 
-        value={tempJob.job_id}
-        onChange={e => setTempJob({...tempJob, job_id: e.target.value})}
-    >
-        <option value="">Select Job</option>
-        {allJobs
-            // Compare the category ID from the job object with the selected category ID
-            .filter(j => j.category?._id === tempJob.category_id) 
-            .map(job => (
-                <option key={job._id} value={job._id}>
-                    {job.jobName} {/* Use jobName instead of name */}
-                </option>
-            ))
-        }
-    </select>
-</div>
-                                <div className="col-md-4">
-                                    <label className="small">Workers Needed</label>
-                                    <input type="number" className="form-control" min="1" value={tempJob.worker_count}
-                                        onChange={e => setTempJob({...tempJob, worker_count: e.target.value})} />
-                                </div>
-                                
-                                <div className="col-md-4">
-                                    <label className="small">Date Strategy</label>
-                                    <select className="form-select" onChange={e => setTempJob({...tempJob, date_type: e.target.value})}>
-                                        <option value="single">Single Day</option>
-                                        <option value="range">Date Range</option>
+                                <div className="col-md-6">
+                                    <label className="small fw-bold">Specific Job</label>
+                                    <select className="form-select" value={tempJob.job_id} onChange={e => setTempJob({...tempJob, job_id: e.target.value})}>
+                                        <option value="">Select Job</option>
+                                        {allJobs
+                                            .filter(j => (j.category?._id || j.category) === tempJob.category_id) 
+                                            .map(job => <option key={job._id} value={job._id}>{job.jobName} (₹{job.price})</option>)
+                                        }
                                     </select>
                                 </div>
-
                                 <div className="col-md-4">
-                                    <label className="small">Start Date</label>
+                                    <label className="small">Date</label>
                                     <input type="date" className="form-control" onChange={e => setTempJob({...tempJob, start_date: e.target.value})} />
                                 </div>
-
-                                {tempJob.date_type === 'range' && (
-                                    <div className="col-md-4">
-                                        <label className="small">End Date</label>
-                                        <input type="date" className="form-control" onChange={e => setTempJob({...tempJob, end_date: e.target.value})} />
-                                    </div>
-                                )}
-
-                                <div className="col-md-6">
-                                    <label className="small">Time Slot (Start - End)</label>
-                                    <div className="d-flex gap-2">
-                                        <input type="time" className="form-control" onChange={e => setTempJob({...tempJob, time_slot: {...tempJob.time_slot, start: e.target.value}})} />
-                                        <input type="time" className="form-control" onChange={e => setTempJob({...tempJob, time_slot: {...tempJob.time_slot, end: e.target.value}})} />
-                                    </div>
+                                <div className="col-md-4">
+                                    <label className="small">Workers Needed</label>
+                                    <input type="number" className="form-control" min="1" value={tempJob.worker_count} onChange={e => setTempJob({...tempJob, worker_count: parseInt(e.target.value)})} />
                                 </div>
-
-                                <div className="col-md-12 text-end">
-                                    <button type="button" className="btn btn-outline-primary" onClick={addToCart}>
-                                        <i className="feather-plus me-2"></i> Add Item
+                                <div className="col-md-4 d-flex align-items-end">
+                                    <button type="button" className="btn btn-primary w-100" onClick={addToCart}>
+                                        <i className="feather-plus me-2"></i> Add to List
                                     </button>
                                 </div>
                             </div>
@@ -182,28 +227,46 @@ const AddBooking = () => {
                     </div>
                 </div>
 
+                {/* Sidebar Summary */}
                 <div className="col-lg-4">
-                    <div className="card shadow-sm border-primary">
-                        <div className="card-header bg-primary text-white"><h5>Order Summary</h5></div>
+                    <div className="card shadow-sm border-0 sticky-top" style={{ top: '20px' }}>
+                        <div className="card-header bg-dark text-white py-3">
+                            <h5 className="mb-0">Booking Summary</h5>
+                        </div>
                         <div className="card-body p-0">
-                            {cart.length === 0 ? <p className="p-3 text-center text-muted">No jobs added yet.</p> : (
+                            {cart.length === 0 ? (
+                                <div className="p-4 text-center text-muted">
+                                    <i className="feather-shopping-cart fs-30 mb-2 d-block"></i>
+                                    No services added.
+                                </div>
+                            ) : (
                                 <ul className="list-group list-group-flush">
                                     {cart.map((item, idx) => (
-                                        <li key={idx} className="list-group-item d-flex justify-content-between align-items-start">
-                                            <div className="ms-2 me-auto">
-                                                <div className="fw-bold">{item.jobName}</div>
-                                                <small className="text-muted">{item.start_date} | {item.worker_count} Workers</small>
+                                        <li key={idx} className="list-group-item py-3">
+                                            <div className="d-flex justify-content-between">
+                                                <div className="fw-bold text-dark">{item.worker_type}</div>
+                                                <button className="btn btn-link text-danger p-0" onClick={() => removeFromCart(idx)}>
+                                                    <i className="feather-trash-2"></i>
+                                                </button>
                                             </div>
-                                            <button className="btn btn-sm text-danger" onClick={() => removeFromCart(idx)}><i className="feather-trash"></i></button>
+                                            <div className="d-flex justify-content-between small text-muted">
+                                                <span>{item.worker_count} worker(s) x ₹{item.price_per_unit}</span>
+                                                <span className="fw-bold">₹{item.price_per_unit * item.worker_count}</span>
+                                            </div>
                                         </li>
                                     ))}
                                 </ul>
                             )}
                         </div>
-                        <div className="card-footer">
-                            <textarea className="form-control mb-3" placeholder="Special Instructions..." rows="2" onChange={e => setNotes(e.target.value)}></textarea>
-                            <div className="alert alert-soft-warning py-2 small">Payment Mode: Cash on Delivery</div>
-                            <button className="btn btn-primary w-100" onClick={handleSubmit}>Create Booking</button>
+                        <div className="card-footer bg-white p-4">
+                            <div className="d-flex justify-content-between mb-3 fs-5">
+                                <span className="fw-bold">Grand Total:</span>
+                                <span className="fw-bold text-primary">₹{calculateTotal().toLocaleString()}</span>
+                            </div>
+                            <textarea className="form-control mb-3" placeholder="Add any specific instructions..." rows="2" onChange={e => setNotes(e.target.value)}></textarea>
+                            <button className="btn btn-primary w-100 py-2 fw-bold" onClick={handleSubmit} disabled={cart.length === 0}>
+                                Create Final Booking
+                            </button>
                         </div>
                     </div>
                 </div>
