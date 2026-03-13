@@ -69,32 +69,38 @@ const BookingDetails = () => {
                                             <th className="pe-4">Status</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        {data.items?.map((item) => (
-                                            <tr key={item._id}>
-                                                <td className="ps-4">
-                                                    <div className="fw-bold text-dark">{item.worker_type}</div>
-                                                    <small className="text-muted">Rate: ₹{item.price_per_unit}/unit</small>
-                                                </td>
-                                                <td>{item.hours} hrs</td>
-                                                <td><code className="text-primary fw-bold">{item.otp}</code></td>
-                                                <td>
-                                                    {item.assigned_worker ? (
-                                                        <span className="badge bg-soft-info text-info border">
-                                                            <i className="feather-user me-1"></i>{item.assigned_worker.name}
-                                                        </span>
-                                                    ) : (
-                                                        <button className="btn btn-xs btn-outline-danger rounded-pill">Assign Now</button>
-                                                    )}
-                                                </td>
-                                                <td className="pe-4">
-                                                    <span className={`badge text-uppercase ${getStatusBadge(item.status)}`}>
-                                                        {item.status}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
+                                    {/* Look for this line in your table body */}
+<tbody>
+    {data.items?.map((item, index) => ( // <--- Add 'index' here
+        <tr key={item._id}>
+            <td className="ps-4">
+                <div className="fw-bold text-dark">{item.worker_type}</div>
+                <small className="text-muted">Rate: ₹{item.price_per_unit}/unit</small>
+            </td>
+            <td>{item.hours} hrs</td>
+            <td><code className="text-primary fw-bold">{item.otp}</code></td>
+            <td>
+                {item.assigned_worker ? (
+                    <span className="badge bg-soft-info text-info border">
+                        <i className="feather-user me-1"></i>{item.assigned_worker.name}
+                    </span>
+                ) : (
+                    <button 
+                        onClick={() => navigate(`/bookings/${data._id}/assign/${index}`)} 
+                        className="btn btn-xs btn-outline-danger rounded-pill"
+                    >
+                        Assign Now
+                    </button>
+                )}
+            </td>
+            <td className="pe-4">
+                <span className={`badge text-uppercase ${getStatusBadge(item.status)}`}>
+                    {item.status}
+                </span>
+            </td>
+        </tr>
+    ))}
+</tbody>
                                 </table>
                             </div>
                         </div>
@@ -117,7 +123,7 @@ const BookingDetails = () => {
                                     <p className="text-muted small mb-0">+91 {data.service_address?.phone}</p>
                                 </div>
                             </div>
-                            
+
                             <div className="bg-light p-3 rounded-3 mb-3">
                                 <label className="small fw-bold text-uppercase text-muted mb-1 d-block">Service Address</label>
                                 <p className="small text-dark mb-1">

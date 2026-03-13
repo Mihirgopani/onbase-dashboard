@@ -7,21 +7,34 @@ const AllBookings = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchBookings = async () => {
-            try {
-                const res = await api.get('/bookings');
-                // Ensure we are setting an array even if the response is unexpected
-                setBookings(Array.isArray(res.data) ? res.data : res.data.bookings || []);
-            } catch (err) {
-                console.error("Error fetching bookings", err);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchBookings();
     }, []);
 
-    // Helper for Status Badge Colors
+    const fetchBookings = async () => {
+        try {
+            const res = await api.get('/bookings');
+            setBookings(Array.isArray(res.data) ? res.data : res.data.bookings || []);
+        } catch (err) {
+            console.error("Error fetching bookings", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (window.confirm("Are you sure you want to delete this booking? This action cannot be undone.")) {
+            try {
+                await api.delete(`/bookings/${id}`);
+                // Filter out the deleted booking from UI instead of reloading everything
+                setBookings(bookings.filter(b => b._id !== id));
+                alert("Booking deleted successfully");
+            } catch (err) {
+                console.error("Delete failed", err);
+                alert("Failed to delete booking");
+            }
+        }
+    };
+
     const getStatusClass = (status) => {
         switch (status?.toLowerCase()) {
             case 'completed': return 'bg-soft-success text-success';
@@ -68,48 +81,51 @@ const AllBookings = () => {
                                     </tr>
                                 ) : bookings.length === 0 ? (
                                     <tr>
-                                        <td colSpan="7" className="text-center py-5 text-muted">
-                                            No bookings found in the system.
-                                        </td>
+                                        <td colSpan="7" className="text-center py-5 text-muted">No bookings found.</td>
                                     </tr>
                                 ) : (
                                     bookings.map((b) => (
                                         <tr key={b._id}>
                                             <td className="ps-4">
                                                 <span className="fw-bold text-dark">
-                                                    #{b._id?.slice(-6).toUpperCase() || 'N/A'}
+                                                    #{b._id?.slice(-6).toUpperCase()}
                                                 </span>
                                             </td>
                                             <td>
-                                                <div className="fw-semibold">{b.service_address?.name || 'Unknown Client'}</div>
-                                                <small className="text-muted">{b.service_address?.phone || b.client?.phone_number || 'No Phone'}</small>
+                                                <div className="fw-semibold">{b.service_address?.name || 'Unknown'}</div>
+                                                <small className="text-muted">{b.service_address?.phone || 'No Phone'}</small>
                                             </td>
                                             <td>
-                                                <div className="text-dark">{b.slot?.date || new Date(b.createdAt).toLocaleDateString()}</div>
-                                                <small className="text-muted">{b.slot?.startTime || 'Anytime'}</small>
+                                                <div>{b.slot?.date}</div>
+                                                <small className="text-muted">{b.slot?.startTime}</small>
                                             </td>
-                                            <td>
-                                                <span className="fw-bold">₹{b.total_amount?.toLocaleString()}</span>
-                                            </td>
+                                            <td><span className="fw-bold">₹{b.total_amount?.toLocaleString()}</span></td>
                                             <td>
                                                 <span className={`badge rounded-pill ${b.payment_status === 'paid' ? 'bg-soft-success text-success' : 'bg-soft-warning text-warning'}`}>
-                                                    <i className={`dot ${b.payment_status === 'paid' ? 'bg-success' : 'bg-warning'} me-1`}></i>
-                                                    {b.payment_status?.toUpperCase() || 'PENDING'}
+                                                    {b.payment_status?.toUpperCase()}
                                                 </span>
                                             </td>
                                             <td>
                                                 <span className={`badge ${getStatusClass(b.overall_status)}`}>
-                                                    {b.overall_status?.toUpperCase() || 'NEW'}
+                                                    {b.overall_status?.toUpperCase()}
                                                 </span>
                                             </td>
                                             <td className="text-end pe-4">
                                                 <div className="btn-group">
                                                     <Link to={`/bookings/details/${b._id}`} className="btn btn-sm btn-light border" title="View Details">
-                                                        <i className="feather-eye"></i>
+                                                        <i className="feather-eye text-primary"></i>
                                                     </Link>
-                                                    <Link to={`/bookings/edit/${b._id}`} className="btn btn-sm btn-light border ms-1" title="Edit Booking">
-                                                        <i className="feather-edit"></i>
+                                                    <Link to={`/bookings/edit/${b._id}`} className="btn btn-sm btn-light border" title="Edit">
+                                                        <i className="feather-edit text-info"></i>
                                                     </Link>
+                                                    {/* DELETE BUTTON */}
+                                                    <button 
+                                                        onClick={() => handleDelete(b._id)} 
+                                                        className="btn btn-sm btn-light border" 
+                                                        title="Delete Booking"
+                                                    >
+                                                        <i className="feather-trash-2 text-danger"></i>
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>

@@ -44,6 +44,15 @@ import AllStates from "./views/locations/AllStates";
 import AllCities from "./views/locations/AllCities";
 import AllAreas from "./views/locations/AllAreas";
 import DumpData from "./views/pages/DumpData";
+import WorkerAssignment from "./views/bookings/WorkerAssignment";
+
+import AllFaqs from "./views/faq/AllFaq";
+import AddFaq from "./views/faq/AddFaq"; // This would wrap <FaqForm isEdit={false} />
+import EditFaq from "./views/faq/EditFaq";
+import FaqDetails from "./views/faq/FaqDetails";
+
+import CategoryBanners from "./views/category-banners/CategoryBannerList";
+import EditCategoryBanner from "./views/category-banners/UpdateCategoryBanner";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
@@ -116,6 +125,15 @@ function App() {
                       <Route path="/settings/global-setting" element={<GlobalSetting />} />
                       <Route path="/settings/dump-data" element={<DumpData />} />
 
+                      {/* NEW: FAQ Management */}
+                      <Route path="/faqs" element={<AllFaqs />} />
+                      <Route path="/faqs/add" element={<AddFaq />} />
+                      <Route path="/faqs/edit/:id" element={<EditFaq />} />
+                      <Route path="/faqs/details/:id" element={<FaqDetails />} />
+
+                      <Route path="/job-categories/banners" element={<CategoryBanners />} />
+<Route path="/job-categories/banner/edit/:id" element={<EditCategoryBanner />} />
+
                       <Route path="/locations/states" element={<AllStates />} />
 <Route path="/locations/cities" element={<AllCities />} />
 <Route path="/locations/areas" element={<AllAreas />} />
@@ -124,6 +142,8 @@ function App() {
 <Route path="/bookings/add" element={<AddBooking />} />
 <Route path="/bookings/details/:id" element={<BookingDetails />} />
 <Route path="/bookings/edit/:id" element={<EditBooking />} />
+
+<Route path="/bookings/:bookingId/assign/:itemIndex" element={<WorkerAssignment />} />
 
                       {/* Fallback for authenticated users */}
                       <Route path="*" element={<Navigate to="/" replace />} />

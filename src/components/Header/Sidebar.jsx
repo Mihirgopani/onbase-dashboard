@@ -22,8 +22,7 @@ const Sidebar = () => {
       <div className="navbar-wrapper">
         <div className="m-header">
           <Link to="/" className="b-brand">
-            {/* <img src="/assets/images/logo-full.png" alt="" className="logo logo-lg" />
-            <img src="/assets/images/logo-abbr.png" alt="" className="logo logo-sm" /> */}
+            {/* Logo space */}
           </Link>
         </div>
         <div className="navbar-content">
@@ -36,7 +35,7 @@ const Sidebar = () => {
               </Link>
             </li>
 
-            {/* Manage Bookings Section - NEW */}
+            {/* Manage Bookings Section */}
             <li className="nxl-item nxl-hasmenu">
               <a href="javascript:void(0);" className="nxl-link">
                 <span className="nxl-micon"><i className="feather-calendar"></i></span>
@@ -96,6 +95,18 @@ const Sidebar = () => {
               </ul>
             </li>
 
+            {/* Manage FAQs Section - NEW */}
+            <li className="nxl-item nxl-hasmenu">
+              <a href="javascript:void(0);" className="nxl-link">
+                <span className="nxl-micon"><i className="feather-help-circle"></i></span>
+                <span className="nxl-mtext">Manage FAQs</span><span className="nxl-arrow"><i className="feather-chevron-right"></i></span>
+              </a>
+              <ul className="nxl-submenu">
+                <li className="nxl-item"><Link className="nxl-link" to="/faqs">All FAQs</Link></li>
+                <li className="nxl-item"><Link className="nxl-link" to="/faqs/add">Add New FAQ</Link></li>
+              </ul>
+            </li>
+
             {/* Settings / Admin Section */}
             <li className="nxl-item nxl-caption"><label>Settings</label></li>
 
@@ -110,7 +121,6 @@ const Sidebar = () => {
               </ul>
             </li>
 
-            {/* Audit Trail - NEW */}
             <li className="nxl-item">
               <Link to="/audit-logs" className="nxl-link">
                 <span className="nxl-micon"><i className="feather-activity"></i></span>
@@ -120,7 +130,7 @@ const Sidebar = () => {
 
             <li className="nxl-item">
               <Link to="/settings/global-setting" className="nxl-link">
-                <span className="nxl-micon"><i className="feather-activity"></i></span>
+                <span className="nxl-micon"><i className="feather-settings"></i></span>
                 <span className="nxl-mtext">Global Settings</span>
               </Link>
             </li>
@@ -145,6 +155,10 @@ const Sidebar = () => {
               </Link>
             </li>
 
+            <li className="nxl-item">
+    <Link className="nxl-link" to="/job-categories/banners">Category Banners</Link>
+</li>
+
             {/* Logout Button */}
             <li className="nxl-item mt-4">
               <a href="javascript:void(0);" className="nxl-link text-danger" onClick={handleLogout}>
@@ -152,8 +166,6 @@ const Sidebar = () => {
                 <span className="nxl-mtext">Logout</span>
               </a>
             </li>
-
-           
           </ul>
         </div>
       </div>
