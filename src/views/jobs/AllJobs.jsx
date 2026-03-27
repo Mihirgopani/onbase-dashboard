@@ -79,9 +79,9 @@ const AllJobs = () => {
                                         <tr key={job._id}>
                                             <td className="ps-4">
                                                 <div className="d-flex align-items-center">
-                                                    <div className="avatar avatar-sm bg-soft-primary text-primary rounded me-3 fw-bold">
-                                                        {job.jobName.charAt(0)}
-                                                    </div>
+                                                <div className="avatar avatar-sm bg-soft-primary text-primary rounded me-3 fw-bold d-flex align-items-center justify-content-center">
+  {job.jobName.charAt(0)}
+</div>
                                                     <span className="fw-bold text-dark">{job.jobName}</span>
                                                 </div>
                                             </td>
