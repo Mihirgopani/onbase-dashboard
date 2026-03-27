@@ -7,7 +7,7 @@ const AllAdmins = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        api.get('/admins').then(res => {
+        api.get('/admin').then(res => {
             setAdmins(res.data);
             setLoading(false);
         }).catch(() => setLoading(false));

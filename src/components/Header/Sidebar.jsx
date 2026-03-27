@@ -22,7 +22,12 @@ const Sidebar = () => {
       <div className="navbar-wrapper">
         <div className="m-header">
           <Link to="/" className="b-brand">
-            {/* Logo space */}
+          <img 
+      src="/assets/images/logo.webp" 
+      alt="Logo" 
+      className="logo"
+      style={{ height: "100px", objectFit: "contain" }}
+    />
           </Link>
         </div>
         <div className="navbar-content">
@@ -121,12 +126,12 @@ const Sidebar = () => {
               </ul>
             </li>
 
-            <li className="nxl-item">
+            {/* <li className="nxl-item">
               <Link to="/audit-logs" className="nxl-link">
                 <span className="nxl-micon"><i className="feather-activity"></i></span>
                 <span className="nxl-mtext">Audit Trail (Logs)</span>
               </Link>
-            </li>
+            </li> */}
 
             <li className="nxl-item">
               <Link to="/settings/global-setting" className="nxl-link">
@@ -156,7 +161,12 @@ const Sidebar = () => {
             </li>
 
             <li className="nxl-item">
-    <Link className="nxl-link" to="/job-categories/banners">Category Banners</Link>
+  <Link className="nxl-link" to="/job-categories/banners">
+    <span className="nxl-micon">
+      <i className="feather-image"></i> {/* icon added */}
+    </span>
+    <span className="nxl-mtext">Category Banners</span>
+  </Link>
 </li>
 
             {/* Logout Button */}

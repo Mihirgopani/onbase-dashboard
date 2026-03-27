@@ -5,6 +5,7 @@ import api from '../../api/axios';
 const AllBookings = () => {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState(""); // State for phone search
 
     useEffect(() => {
         fetchBookings();
@@ -25,7 +26,6 @@ const AllBookings = () => {
         if (window.confirm("Are you sure you want to delete this booking? This action cannot be undone.")) {
             try {
                 await api.delete(`/bookings/${id}`);
-                // Filter out the deleted booking from UI instead of reloading everything
                 setBookings(bookings.filter(b => b._id !== id));
                 alert("Booking deleted successfully");
             } catch (err) {
@@ -34,6 +34,12 @@ const AllBookings = () => {
             }
         }
     };
+
+    // Filter Logic: Check if the phone number includes the search query
+    const filteredBookings = bookings.filter(b => {
+        const phone = b.client?.phone_number || "";
+        return phone.includes(searchQuery);
+    });
 
     const getStatusClass = (status) => {
         switch (status?.toLowerCase()) {
@@ -51,9 +57,36 @@ const AllBookings = () => {
                     <h2 className="fs-20 fw-bold mb-0">All Bookings</h2>
                     <p className="text-muted small mb-0">Manage and track all service requests</p>
                 </div>
-                <Link to="/bookings/add" className="btn btn-primary d-flex align-items-center">
-                    <i className="feather-plus me-2"></i> Create New Booking
-                </Link>
+                <div className="d-flex gap-2">
+                    <Link to="/bookings/add" className="btn btn-primary d-flex align-items-center">
+                        <i className="feather-plus me-2"></i> Create New Booking
+                    </Link>
+                </div>
+            </div>
+
+            <div className="px-4 mt-3">
+                <div className="row">
+                    <div className="col-md-4">
+                        <div className="position-relative">
+                            <i className="feather-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                            <input 
+                                type="text" 
+                                className="form-control ps-5 rounded-pill border-0 shadow-sm" 
+                                placeholder="Search by Phone Number..." 
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                            {searchQuery && (
+                                <button 
+                                    className="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 text-decoration-none text-muted"
+                                    onClick={() => setSearchQuery("")}
+                                >
+                                    <i className="feather-x"></i>
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div className="p-4">
@@ -79,12 +112,14 @@ const AllBookings = () => {
                                             Loading bookings...
                                         </td>
                                     </tr>
-                                ) : bookings.length === 0 ? (
+                                ) : filteredBookings.length === 0 ? (
                                     <tr>
-                                        <td colSpan="7" className="text-center py-5 text-muted">No bookings found.</td>
+                                        <td colSpan="7" className="text-center py-5 text-muted">
+                                            {searchQuery ? `No bookings found for "${searchQuery}"` : "No bookings found."}
+                                        </td>
                                     </tr>
                                 ) : (
-                                    bookings.map((b) => (
+                                    filteredBookings.map((b) => (
                                         <tr key={b._id}>
                                             <td className="ps-4">
                                                 <span className="fw-bold text-dark">
@@ -92,8 +127,10 @@ const AllBookings = () => {
                                                 </span>
                                             </td>
                                             <td>
-                                                <div className="fw-semibold">{b.service_address?.name || 'Unknown'}</div>
-                                                <small className="text-muted">{b.service_address?.phone || 'No Phone'}</small>
+                                                <div className="fw-semibold">{b.client?.name || 'Unknown'}</div>
+                                                <small className={`text-muted ${searchQuery && b.client?.phone_number?.includes(searchQuery) ? 'bg-warning-soft px-1 rounded' : ''}`}>
+                                                    {b.client?.phone_number || 'No Phone'}
+                                                </small>
                                             </td>
                                             <td>
                                                 <div>{b.slot?.date}</div>
@@ -118,7 +155,6 @@ const AllBookings = () => {
                                                     <Link to={`/bookings/edit/${b._id}`} className="btn btn-sm btn-light border" title="Edit">
                                                         <i className="feather-edit text-info"></i>
                                                     </Link>
-                                                    {/* DELETE BUTTON */}
                                                     <button 
                                                         onClick={() => handleDelete(b._id)} 
                                                         className="btn btn-sm btn-light border" 

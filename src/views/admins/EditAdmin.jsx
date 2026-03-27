@@ -8,7 +8,7 @@ const EditAdmin = () => {
     const [formData, setFormData] = useState(null);
 
     useEffect(() => {
-        api.get(`/admins/${id}`).then(res => setFormData(res.data));
+        api.get(`/admin/${id}`).then(res => setFormData(res.data));
     }, [id]);
 
     const handleUpdate = async (e) => {

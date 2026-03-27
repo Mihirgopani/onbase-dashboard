@@ -18,7 +18,7 @@ const AddAdmin = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await api.post('/admins', formData);
+            await api.post('/admin', formData);
             navigate('/admins');
         } catch (err) {
             console.error(err);

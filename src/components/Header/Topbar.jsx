@@ -2,7 +2,7 @@ import React from 'react';
 
 const Topbar = () => {
   return (
-    <header className="nxl-header">
+    <header className="nxl-header pt-0 mt-0" style={{marginTop:"0px"}}>
       <div className="header-wrapper">
         <div className="header-left d-flex align-items-center gap-4">
           <a href="#!" className="nxl-head-mobile-toggler" id="mobile-collapse">
@@ -16,12 +16,12 @@ const Topbar = () => {
         </div>
         <div className="header-right ms-auto">
           <div className="d-flex align-items-center">
-            <div className="nxl-h-item dark-light-theme">
+            {/* <div className="nxl-h-item dark-light-theme">
               <a href="#!" className="nxl-head-link me-0 dark-button"><i className="feather-moon"></i></a>
-            </div>
+            </div> */}
             <div className="dropdown nxl-h-item">
               <a href="#!" data-bs-toggle="dropdown" role="button">
-                <img src="/assets/images/avatar/1.png" alt="" className="img-fluid user-avtar me-0" />
+                <img src="/assets/images/profile-avtar.webp" alt="" className="img-fluid user-avtar me-0" />
               </a>
             </div>
           </div>

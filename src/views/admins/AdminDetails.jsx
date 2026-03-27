@@ -8,7 +8,7 @@ const AdminDetails = () => {
     const [admin, setAdmin] = useState(null);
 
     useEffect(() => {
-        api.get(`/admins/${id}`)
+        api.get(`/admin/${id}`)
             .then(res => setAdmin(res.data))
             .catch(() => navigate('/admins'));
     }, [id, navigate]);
