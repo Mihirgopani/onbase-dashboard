@@ -42,9 +42,7 @@ const Login = () => {
                     <div className="card my-4 overflow-hidden" style={{ zIndex: 1 }}>
                         <div className="row flex-1 g-0">
                             <div className="col-lg-6 h-100 my-auto order-1 order-lg-0">
-                                <div className="wd-50 bg-white p-2 rounded-circle shadow-lg position-absolute translate-middle top-50 start-50 d-none d-lg-block">
-                                    <img src="/assets/images/logo-abbr.png" alt="Logo" className="img-fluid" />
-                                </div>
+                               
                                 <div className="creative-card-body card-body p-sm-5">
                                     <h2 className="fs-20 fw-bolder mb-4">Login</h2>
                                     <h4 className="fs-13 fw-bold mb-2">Login to your account</h4>
@@ -113,7 +111,7 @@ const Login = () => {
                             </div>
                             <div className="col-lg-6 bg-primary order-0 order-lg-1">
                                 <div className="h-100 d-flex align-items-center justify-content-center">
-                                    <img src="/assets/images/auth/auth-user.png" alt="Auth" className="img-fluid" />
+                                    <img src="/assets/images/login-banner.webp" alt="Auth" className="img-fluid" />
                                 </div>
                             </div>
                         </div>

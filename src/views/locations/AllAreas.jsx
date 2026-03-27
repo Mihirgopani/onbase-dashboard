@@ -8,6 +8,7 @@ const AllAreas = () => {
     const [cities, setCities] = useState([]);
     const [isUploading, setIsUploading] = useState(false);
     const [manualArea, setManualArea] = useState({ name: '', pincode: '', city: '', latitude: '', longitude: '' });
+    const [searchQuery, setSearchQuery] = useState(''); // New State
 
     useEffect(() => {
         api.get('/locations/cities').then(res => setCities(res.data));
@@ -22,9 +23,8 @@ const AllAreas = () => {
     const handleBulkUpload = async (results) => {
         setIsUploading(true);
         try {
-            // Mapping CSV headers based on India Post Directory structure
             const formattedData = results.data.slice(1)
-                .filter(row => row[4]) // Ensure Pincode exists
+                .filter(row => row[4])
                 .map(row => ({
                     officename: row[3],
                     pincode: row[4],
@@ -48,6 +48,13 @@ const AllAreas = () => {
         setManualArea({ name: '', pincode: '', city: '', latitude: '', longitude: '' });
         fetchAreas();
     };
+
+    // Filter Logic
+    const filteredAreas = areas.filter(a => 
+        a.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        a.pincode?.toString().includes(searchQuery) || 
+        a.city?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     return (
         <div className="main-content p-4">
@@ -78,8 +85,8 @@ const AllAreas = () => {
                                     {cities.map(c => <option key={c._id} value={c._id}>{c.name} ({c.state?.name})</option>)}
                                 </select>
                                 <div className="row">
-                                    <div className="col"><input type="text" className="form-control mb-2" placeholder="Lat" onChange={e => setManualArea({...manualArea, latitude: e.target.value})} /></div>
-                                    <div className="col"><input type="text" className="form-control mb-2" placeholder="Lng" onChange={e => setManualArea({...manualArea, longitude: e.target.value})} /></div>
+                                    <div className="col"><input type="text" className="form-control mb-2" placeholder="Lat" value={manualArea.latitude} onChange={e => setManualArea({...manualArea, latitude: e.target.value})} /></div>
+                                    <div className="col"><input type="text" className="form-control mb-2" placeholder="Lng" value={manualArea.longitude} onChange={e => setManualArea({...manualArea, longitude: e.target.value})} /></div>
                                 </div>
                                 <button className="btn btn-dark w-100">Add Area</button>
                             </form>
@@ -89,9 +96,14 @@ const AllAreas = () => {
 
                 <div className="col-md-8">
                     <div className="card shadow-sm border-0">
-                        <div className="card-header bg-white d-flex justify-content-between">
+                        <div className="card-header bg-white d-flex justify-content-between align-items-center">
                             <h5 className="mb-0">Area Database</h5>
-                            <span className="badge bg-info">{areas.length} Total Areas</span>
+                            <input 
+                                type="text" 
+                                className="form-control form-control-sm w-50" 
+                                placeholder="Search area, pincode or city..." 
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
                         </div>
                         <div className="table-responsive" style={{maxHeight: '600px'}}>
                             <table className="table table-sm table-hover align-middle">
@@ -99,12 +111,14 @@ const AllAreas = () => {
                                     <tr><th>Area</th><th>Pincode</th><th>City</th><th>Coords</th><th>Action</th></tr>
                                 </thead>
                                 <tbody>
-                                    {areas.map(a => (
+                                    {filteredAreas.map(a => (
                                         <tr key={a._id}>
                                             <td>{a.name}</td>
                                             <td><code className="text-primary">{a.pincode}</code></td>
                                             <td>{a.city?.name}</td>
-                                            <td className="small text-muted">{a.location.coordinates[1].toFixed(2)}, {a.location.coordinates[0].toFixed(2)}</td>
+                                            <td className="small text-muted">
+                                                {a.location.coordinates[1].toFixed(2)}, {a.location.coordinates[0].toFixed(2)}
+                                            </td>
                                             <td><button onClick={() => api.delete(`/locations/area/${a._id}`).then(fetchAreas)} className="btn btn-link text-danger p-0"><i className="feather-trash"></i></button></td>
                                         </tr>
                                     ))}

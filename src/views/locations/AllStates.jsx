@@ -5,6 +5,7 @@ const AllStates = () => {
     const [states, setStates] = useState([]);
     const [name, setName] = useState('');
     const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState(''); // New State
 
     useEffect(() => { fetchStates(); }, []);
 
@@ -30,6 +31,11 @@ const AllStates = () => {
         }
     };
 
+    // Filter Logic
+    const filteredStates = states.filter(s => 
+        s.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
         <div className="main-content p-4">
             <div className="row">
@@ -50,14 +56,22 @@ const AllStates = () => {
                 </div>
                 <div className="col-md-8">
                     <div className="card shadow-sm border-0">
-                        <div className="card-header bg-white py-3"><h5 className="mb-0">Registered States</h5></div>
+                        <div className="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                            <h5 className="mb-0">Registered States</h5>
+                            <input 
+                                type="text" 
+                                className="form-control form-control-sm w-50" 
+                                placeholder="Search state..." 
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
                         <div className="table-responsive">
                             <table className="table table-hover mb-0">
                                 <thead className="table-light">
                                     <tr><th>ID</th><th>State Name</th><th>Status</th><th>Action</th></tr>
                                 </thead>
                                 <tbody>
-                                    {states.map((s, idx) => (
+                                    {filteredStates.map((s, idx) => (
                                         <tr key={s._id}>
                                             <td>{idx + 1}</td>
                                             <td className="fw-bold">{s.name}</td>

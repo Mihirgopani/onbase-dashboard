@@ -5,6 +5,7 @@ const AllCities = () => {
     const [cities, setCities] = useState([]);
     const [states, setStates] = useState([]);
     const [formData, setFormData] = useState({ name: '', state: '' });
+    const [searchQuery, setSearchQuery] = useState(''); // New State
 
     useEffect(() => {
         api.get('/locations/states').then(res => setStates(res.data));
@@ -22,6 +23,12 @@ const AllCities = () => {
         setFormData({ name: '', state: '' });
         fetchCities();
     };
+
+    // Filter Logic
+    const filteredCities = cities.filter(c => 
+        c.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        c.state?.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     return (
         <div className="main-content p-4">
@@ -49,14 +56,22 @@ const AllCities = () => {
                 </div>
                 <div className="col-md-8">
                     <div className="card shadow-sm border-0">
-                        <div className="card-header bg-white py-3"><h5 className="mb-0">Registered Cities</h5></div>
+                        <div className="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                            <h5 className="mb-0">Registered Cities</h5>
+                            <input 
+                                type="text" 
+                                className="form-control form-control-sm w-50" 
+                                placeholder="Search city or state..." 
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
                         <div className="table-responsive">
                             <table className="table table-hover mb-0">
                                 <thead className="table-light">
                                     <tr><th>City</th><th>State</th><th>Action</th></tr>
                                 </thead>
                                 <tbody>
-                                    {cities.map(c => (
+                                    {filteredCities.map(c => (
                                         <tr key={c._id}>
                                             <td className="fw-bold">{c.name}</td>
                                             <td>{c.state?.name}</td>

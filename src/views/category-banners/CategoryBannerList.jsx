@@ -23,10 +23,10 @@ const CategoryBannerList = () => {
 
     return (
         <div className="main-content">
-            <div className="page-header px-4 mt-4">
-                <h2 className="fs-20 fw-bold mb-0">App Category Banners</h2>
-                <p className="text-muted small">Update the visual banners shown in the mobile application</p>
-            </div>
+<div className="page-header px-4 mt-4 d-flex flex-column pt-3 align-items-start">
+    <h2 className="fs-20 fw-bold mb-0 ">App Category Banners</h2>
+    <p className="text-muted small">Update the visual banners shown in the mobile application</p>
+</div>
 
             <div className="p-4">
                 {loading ? (
@@ -38,10 +38,10 @@ const CategoryBannerList = () => {
                         {categories.map((cat) => (
                             <div className="col-md-6 col-xl-4 mb-4" key={cat._id}>
                                 <div className="card shadow-sm border-0 h-100 overflow-hidden">
-                                    <div className="position-relative bg-light" style={{ height: '160px' }}>
+                                    <div className="position-relative bg-light" style={{ height: '300px' }}>
                                         {cat.bannerImage ? (
                                             <img 
-                                                src={`http://localhost:5001${cat.bannerImage}`} 
+                                                src={`https://api.onbasenow.com${cat.bannerImage}`} 
                                                 className="w-100 h-100 object-fit-cover" 
                                                 alt={cat.name} 
                                             />
