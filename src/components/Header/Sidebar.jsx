@@ -22,12 +22,12 @@ const Sidebar = () => {
       <div className="navbar-wrapper">
         <div className="m-header">
           <Link to="/" className="b-brand">
-          <img 
-      src="/assets/images/logo.webp" 
-      alt="Logo" 
-      className="logo"
-      style={{ height: "100px", objectFit: "contain" }}
-    />
+            <img
+              src="/assets/images/logo.webp"
+              alt="Logo"
+              className="logo"
+              style={{ height: "100px", objectFit: "contain" }}
+            />
           </Link>
         </div>
         <div className="navbar-content">
@@ -140,8 +140,8 @@ const Sidebar = () => {
               </Link>
             </li>
 
-             {/* Manage Locations Section */}
-             <li className="nxl-item nxl-hasmenu">
+            {/* Manage Locations Section */}
+            <li className="nxl-item nxl-hasmenu">
               <a href="javascript:void(0);" className="nxl-link">
                 <span className="nxl-micon"><i className="feather-map-pin"></i></span>
                 <span className="nxl-mtext">Locations</span><span className="nxl-arrow"><i className="feather-chevron-right"></i></span>
@@ -150,6 +150,11 @@ const Sidebar = () => {
                 <li className="nxl-item"><Link className="nxl-link" to="/locations/states">States</Link></li>
                 <li className="nxl-item"><Link className="nxl-link" to="/locations/cities">Cities</Link></li>
                 <li className="nxl-item"><Link className="nxl-link" to="/locations/areas">Areas & Bulk Upload</Link></li>
+                <li className="nxl-item">
+                  <Link className="nxl-link text-primary fw-bold" to="/locations/expand">
+                    <i className="feather-plus-circle me-2"></i>Expand Service
+                  </Link>
+                </li>
               </ul>
             </li>
 
@@ -161,13 +166,13 @@ const Sidebar = () => {
             </li>
 
             <li className="nxl-item">
-  <Link className="nxl-link" to="/job-categories/banners">
-    <span className="nxl-micon">
-      <i className="feather-image"></i> {/* icon added */}
-    </span>
-    <span className="nxl-mtext">Category Banners</span>
-  </Link>
-</li>
+              <Link className="nxl-link" to="/job-categories/banners">
+                <span className="nxl-micon">
+                  <i className="feather-image"></i> {/* icon added */}
+                </span>
+                <span className="nxl-mtext">Category Banners</span>
+              </Link>
+            </li>
 
             {/* Logout Button */}
             <li className="nxl-item mt-4">

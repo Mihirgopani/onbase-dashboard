@@ -89,19 +89,24 @@ const WorkerAssignment = () => {
     const handleAssign = async (workerId, assigneeType) => {
         setBtnLoading(`${workerId}-${assigneeType}`);
         try {
+            // Get the specific item object from the booking
+            const targetItem = booking.items[itemIndex];
+    
             const payload = {
                 bookingId: booking._id,
-                itemIndex: parseInt(itemIndex), 
+                itemId: targetItem._id, // NEW: Send the unique item ID
                 leadWorkerId: workerId,
                 tasks: [{
-                    work_type: booking.items[itemIndex].worker_type,
+                    work_type: targetItem.worker_type,
                     assignee_type: assigneeType,
                     status: 'pending'
                 }]
             };
+            
             await api.post('/assignments/create', payload);
             navigate(`/bookings/${bookingId}`);
         } catch (err) {
+            console.error(err);
             alert("Assignment failed.");
         } finally {
             setBtnLoading(null);

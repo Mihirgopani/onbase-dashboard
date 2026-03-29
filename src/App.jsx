@@ -43,6 +43,7 @@ import GlobalSetting from "./views/pages/Settings";
 import AllStates from "./views/locations/AllStates";
 import AllCities from "./views/locations/AllCities";
 import AllAreas from "./views/locations/AllAreas";
+import ExpansionManager from "./views/pages/ExpansionManager";
 import DumpData from "./views/pages/DumpData";
 import WorkerAssignment from "./views/bookings/WorkerAssignment";
 
@@ -65,7 +66,7 @@ function App() {
 
     // Listen for storage changes (helpful if login happens in another tab)
     window.addEventListener('storage', checkAuth);
-    
+
     return () => window.removeEventListener('storage', checkAuth);
   }, []);
 
@@ -73,20 +74,20 @@ function App() {
     <Router>
       <Routes>
         {/* Public Login Route: If already logged in, redirect to Dashboard */}
-        <Route 
-          path="/login" 
-          element={!isAuthenticated ? <Login /> : <Navigate to="/" replace />} 
+        <Route
+          path="/login"
+          element={!isAuthenticated ? <Login /> : <Navigate to="/" replace />}
         />
 
         {/* Protected Dashboard Routes */}
-        <Route 
-          path="/*" 
+        <Route
+          path="/*"
           element={
             isAuthenticated ? (
-              <div className="layout-wrapper" style={{marginTop:"0px"}}>
+              <div className="layout-wrapper" style={{ marginTop: "0px" }}>
                 <Sidebar />
                 <Topbar />
-                
+
                 <main className="nxl-container">
                   <div className="nxl-content">
                     <Routes>
@@ -132,18 +133,19 @@ function App() {
                       <Route path="/faqs/details/:id" element={<FaqDetails />} />
 
                       <Route path="/job-categories/banners" element={<CategoryBanners />} />
-<Route path="/job-categories/banner/edit/:id" element={<EditCategoryBanner />} />
+                      <Route path="/job-categories/banner/edit/:id" element={<EditCategoryBanner />} />
 
                       <Route path="/locations/states" element={<AllStates />} />
-<Route path="/locations/cities" element={<AllCities />} />
-<Route path="/locations/areas" element={<AllAreas />} />
+                      <Route path="/locations/cities" element={<AllCities />} />
+                      <Route path="/locations/areas" element={<AllAreas />} />
+                      <Route path="/locations/expand" element={<ExpansionManager />} />
 
                       <Route path="/bookings" element={<AllBookings />} />
-<Route path="/bookings/add" element={<AddBooking />} />
-<Route path="/bookings/details/:id" element={<BookingDetails />} />
-<Route path="/bookings/edit/:id" element={<EditBooking />} />
+                      <Route path="/bookings/add" element={<AddBooking />} />
+                      <Route path="/bookings/details/:id" element={<BookingDetails />} />
+                      <Route path="/bookings/edit/:id" element={<EditBooking />} />
 
-<Route path="/bookings/:bookingId/assign/:itemIndex" element={<WorkerAssignment />} />
+                      <Route path="/bookings/:bookingId/assign/:itemIndex" element={<WorkerAssignment />} />
 
                       {/* Fallback for authenticated users */}
                       <Route path="*" element={<Navigate to="/" replace />} />
@@ -160,7 +162,7 @@ function App() {
             ) : (
               <Navigate to="/login" replace />
             )
-          } 
+          }
         />
       </Routes>
     </Router>
