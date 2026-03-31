@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 
@@ -7,107 +7,133 @@ const WorkerAssignment = () => {
     const navigate = useNavigate();
     
     const [booking, setBooking] = useState(null);
-    const [workers, setWorkers] = useState([]);
+    const [allWorkers, setAllWorkers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [btnLoading, setBtnLoading] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
 
     const [locations, setLocations] = useState({ states: [], cities: [], areas: [] });
     const [allJobs, setAllJobs] = useState([]);
-    const [jobCategories, setJobCategories] = useState([]);
-    const [filters, setFilters] = useState({ state: "", city: "", area: "", category: "", jobName: "" });
+    const [categories, setCategories] = useState([]);
+
+    const [filters, setFilters] = useState({
+        state: "Gujarat",
+        city: "Ahmedabad", // Hardcoded baseline
+        area: "",
+        workCategory: "",
+        workType: ""
+    });
 
     useEffect(() => {
-        fetchInitialData();
-        fetchMasterData();
+        const loadData = async () => {
+            try {
+                setLoading(true);
+                const [sRes, cRes, aRes, jRes, bRes, wRes] = await Promise.all([
+                    api.get('/locations/states'),
+                    api.get('/locations/cities'),
+                    api.get('/locations/areas'),
+                    api.get('/jobs'),
+                    api.get(`/bookings/${bookingId}`),
+                    api.get('/workers')
+                ]);
+
+                const states = sRes.data || [];
+                const cities = cRes.data || [];
+                const areas = aRes.data || [];
+                const jobs = jRes.data || [];
+                const currentBooking = bRes.data?.data;
+                const targetItem = currentBooking?.items[itemIndex];
+                const workers = Array.isArray(wRes.data) ? wRes.data : wRes.data.data || [];
+
+                setLocations({ states, cities, areas });
+                setAllJobs(jobs);
+                setCategories([...new Set(jobs.map(j => j.category?.name).filter(Boolean))]);
+                setAllWorkers(workers);
+                setBooking(currentBooking);
+
+                // Logical Default Assignment
+                if (currentBooking && targetItem) {
+                    setFilters({
+                        // 1. Check Booking -> 2. Check "Gujarat" exists in API -> 3. Take first API state
+                        state: currentBooking.service_address?.state || 
+                               (states.find(s => s.name === "Gujarat")?.name) || 
+                               (states[0]?.name || ""),
+                        
+                        // 1. Check Booking -> 2. Check "Ahmedabad" exists in API -> 3. Take first API city
+                        city: currentBooking.service_address?.city || 
+                              (cities.find(c => c.name === "Ahmedabad")?.name) || 
+                              (cities[0]?.name || ""),
+                              
+                        area: currentBooking.service_address?.area || "",
+                        workCategory: targetItem.category_name || "",
+                        workType: targetItem.worker_type || ""
+                    });
+                }
+            } catch (err) {
+                console.error("❌ Data Fetch Error:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadData();
     }, [bookingId, itemIndex]);
 
-    useEffect(() => {
-        if (filters.category || filters.city || filters.jobName || filters.state || filters.area) {
-            fetchWorkers();
-        }
-    }, [filters]);
+    const filteredWorkers = useMemo(() => {
+        return allWorkers.filter(worker => {
+            const matchesSearch = !searchQuery || 
+                worker.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                worker.phone_number?.includes(searchQuery);
 
-    const fetchMasterData = async () => {
-        try {
-            const [sRes, cRes, aRes, jRes] = await Promise.all([
-                api.get('/locations/states'),
-                api.get('/locations/cities'),
-                api.get('/locations/areas'),
-                api.get('/jobs')
-            ]);
-            setLocations({ 
-                states: sRes.data || [], 
-                cities: cRes.data || [], 
-                areas: aRes.data || [] 
-            });
-            const jobs = jRes.data || [];
-            setAllJobs(jobs);
-            setJobCategories([...new Set(jobs.map(j => j.category.name))]);
-        } catch (err) {
-            console.error("Error fetching master data", err);
-        }
-    };
+            const matchesState = !filters.state || !worker.state || worker.state === filters.state;
 
-    const fetchInitialData = async () => {
-        try {
-            const bRes = await api.get(`/bookings/${bookingId}`);
-            const currentBooking = bRes.data.data;
-            setBooking(currentBooking);
-            
-            const targetItem = currentBooking.items[itemIndex];
-            setFilters(prev => ({
-                ...prev,
-                jobName: targetItem.worker_type,
-                city: currentBooking.service_address.city
-            }));
-        } catch (err) {
-            console.error("Error fetching booking", err);
-        } finally {
-            setLoading(false);
-        }
-    };
+            // City Mapping
+            const workerCityObj = locations.cities.find(c => c._id === worker.city);
+            const workerCityName = workerCityObj ? workerCityObj.name : worker.city;
+            const matchesCity = !filters.city || 
+                workerCityName?.toLowerCase() === filters.city.toLowerCase() ||
+                worker.city === filters.city;
 
-    const fetchWorkers = async () => {
-        try {
-            const params = { ...filters, work_type: filters.jobName };
-            const wRes = await api.get(`/workers`, { params });
-            setWorkers(wRes.data.data || wRes.data);
-        } catch (err) {
-            console.error("Error fetching workers", err);
-        }
-    };
+            // Area Mapping
+            const workerAreaObj = locations.areas.find(a => a._id === worker.area);
+            const workerAreaName = workerAreaObj ? workerAreaObj.name : worker.area;
+            const matchesArea = !filters.area || 
+                workerAreaName?.toLowerCase() === filters.area.toLowerCase() ||
+                worker.area === filters.area;
+
+            const targetSkill = filters.workType?.toLowerCase() || "";
+            const normalizedSkill = targetSkill.replace(/\s+/g, '_');
+            const matchesCategory = !filters.workCategory || 
+                worker.work_type?.toLowerCase() === filters.workCategory.toLowerCase();
+
+            const hasSkill = !targetSkill || 
+                worker.work_type?.toLowerCase() === targetSkill ||
+                worker.team_members?.some(tm => 
+                    tm.type?.toLowerCase() === normalizedSkill || 
+                    tm.type?.toLowerCase().replace(/_/g, ' ') === targetSkill
+                );
+
+            return matchesSearch && matchesState && matchesCity && matchesArea && matchesCategory && hasSkill;
+        });
+    }, [allWorkers, filters, searchQuery, locations.cities, locations.areas]);
 
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
-        if (name === 'state') setFilters(prev => ({ ...prev, state: value, city: "", area: "" }));
-        else if (name === 'city') setFilters(prev => ({ ...prev, city: value, area: "" }));
-        else if (name === 'category') setFilters(prev => ({ ...prev, category: value, jobName: "" }));
-        else setFilters(prev => ({ ...prev, [name]: value }));
+        setFilters(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleAssign = async (workerId, assigneeType) => {
-        setBtnLoading(`${workerId}-${assigneeType}`);
+    const handleAssign = async (workerId) => {
+        setBtnLoading(workerId);
         try {
-            // Get the specific item object from the booking
             const targetItem = booking.items[itemIndex];
-    
-            const payload = {
+            await api.post('/assignments/create', {
                 bookingId: booking._id,
-                itemId: targetItem._id, // NEW: Send the unique item ID
+                itemId: targetItem._id,
                 leadWorkerId: workerId,
-                tasks: [{
-                    work_type: targetItem.worker_type,
-                    assignee_type: assigneeType,
-                    status: 'pending'
-                }]
-            };
-            
-            await api.post('/assignments/create', payload);
+                tasks: [{ work_type: targetItem.worker_type, status: 'pending' }]
+            });
             navigate(`/bookings/${bookingId}`);
         } catch (err) {
-            console.error(err);
-            alert("Assignment failed.");
+            alert("Assignment failed");
         } finally {
             setBtnLoading(null);
         }
@@ -118,83 +144,90 @@ const WorkerAssignment = () => {
     return (
         <div className="main-content px-4 mt-4">
             <div className="row">
-                {/* Sidebar Filters */}
                 <div className="col-lg-4">
-                    <div className="card border-0 shadow-sm mb-4" style={{ borderRadius: '15px' }}>
-                        <div className="card-body">
-                            <div className="d-flex justify-content-between align-items-center mb-3">
-                                <h6 className="fw-bold mb-0">Advanced Filters</h6>
-                                <button className="btn btn-sm text-danger fw-bold" onClick={() => setFilters({state:"", city:"", area:"", category:"", jobName:""})}>Clear All</button>
-                            </div>
-
-                            {/* Job Selectors */}
-                            <label className="small fw-bold text-muted text-uppercase mb-1">Job Details</label>
-                            <select className="form-select mb-2" name="category" value={filters.category} onChange={handleFilterChange}>
-                                <option value="">Select Category</option>
-                                {jobCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                            </select>
-                            <select className="form-select mb-3" name="jobName" value={filters.jobName} onChange={handleFilterChange}>
-                                <option value="">Select Job Type</option>
-                                {allJobs.filter(j => !filters.category || j.category.name === filters.category).map(j => (
-                                    <option key={j._id} value={j.jobName}>{j.jobName}</option>
-                                ))}
-                            </select>
-
-                            {/* Location Selectors */}
-                            <label className="small fw-bold text-muted text-uppercase mb-1">Location</label>
-                            <select className="form-select mb-2" name="state" value={filters.state} onChange={handleFilterChange}>
+                    <div className="card border-0 shadow-sm p-4 mb-4" style={{ borderRadius: '15px' }}>
+                        <h6 className="fw-bold mb-3 text-primary">Assignment Filters</h6>
+                        
+                        <div className="mb-3">
+                            <label className="small fw-bold text-muted text-uppercase">State</label>
+                            <select className="form-select" name="state" value={filters.state} onChange={handleFilterChange}>
                                 <option value="">Select State</option>
                                 {locations.states.map(s => <option key={s._id} value={s.name}>{s.name}</option>)}
                             </select>
-                            <select className="form-select mb-2" name="city" value={filters.city} onChange={handleFilterChange}>
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="small fw-bold text-muted text-uppercase">City</label>
+                            <select className="form-select" name="city" value={filters.city} onChange={handleFilterChange}>
                                 <option value="">Select City</option>
-                                {locations.cities.filter(c => !filters.state || c.state.name === filters.state).map(c => (
-                                    <option key={c._id} value={c.name}>{c.name}</option>
-                                ))}
+                                {locations.cities.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
                             </select>
-                            <select className="form-select mb-3" name="area" value={filters.area} onChange={handleFilterChange}>
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="small fw-bold text-muted text-uppercase">Area</label>
+                            <select className="form-select" name="area" value={filters.area} onChange={handleFilterChange}>
                                 <option value="">Select Area</option>
-                                {locations.areas.filter(a => !filters.city || a.city.name === filters.city).map(a => (
+                                {locations.areas.filter(a => !filters.city || a.city?.name === filters.city).map(a => (
                                     <option key={a._id} value={a.name}>{a.name}</option>
                                 ))}
                             </select>
-
-                            <input type="text" className="form-control" placeholder="Search by name..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
                         </div>
+
+                        <hr />
+
+                        <div className="mb-3">
+                            <label className="small fw-bold text-muted text-uppercase">Work Category</label>
+                            <select className="form-select" name="workCategory" value={filters.workCategory} onChange={handleFilterChange}>
+                                <option value="">All Categories</option>
+                                {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                            </select>
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="small fw-bold text-muted text-uppercase">Work Type (Skill)</label>
+                            <select className="form-select" name="workType" value={filters.workType} onChange={handleFilterChange}>
+                                <option value="">All Skills</option>
+                                {allJobs.map(j => <option key={j._id} value={j.jobName}>{j.jobName}</option>)}
+                            </select>
+                        </div>
+
+                        <input type="text" className="form-control" placeholder="Search name/phone..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
                     </div>
                 </div>
 
-                {/* Worker List */}
                 <div className="col-lg-8">
-                    {workers.filter(w => w.name.toLowerCase().includes(searchQuery.toLowerCase())).map(worker => (
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                        <h5 className="fw-bold mb-0">Qualified Professionals</h5>
+                        <span className="badge bg-primary px-3">{filteredWorkers.length} matching</span>
+                    </div>
+
+                    {filteredWorkers.map(worker => (
                         <div key={worker._id} className="card border-0 shadow-sm mb-3">
                             <div className="card-body p-4">
-                                <div className="d-flex justify-content-between align-items-start">
-                                    <div className="d-flex align-items-center">
-                                        <div className="avatar-md bg-soft-primary text-primary rounded-circle me-3 d-flex align-items-center justify-content-center fw-bold" style={{width: '50px', height: '50px', backgroundColor: '#eef2ff'}}>
-                                            {worker.name.charAt(0)}
+                                <div className="d-flex justify-content-between align-items-center">
+                                    <div className="d-flex align-items-start">
+                                        <div className="avatar-md bg-soft-primary text-primary rounded-circle me-3 d-flex align-items-center justify-content-center fw-bold" style={{width: '50px', height: '50px'}}>
+                                            {worker.name?.charAt(0) || 'W'}
                                         </div>
                                         <div>
-                                            <h6 className="mb-1 fw-bold">{worker.name}</h6>
-                                            <div className="small text-muted mb-2">
-                                                <i className="feather-map-pin me-1"></i>{worker.city} {worker.area ? `(${worker.area})` : ''}
-                                            </div>
+                                            <h6 className="mb-1 fw-bold">{worker.name || "Unknown"}</h6>
+                                            <small className="text-muted d-block mb-2">{worker.phone_number}</small>
+                                            
                                             <div className="d-flex flex-wrap gap-2">
-                                                <span className="badge bg-primary-soft text-primary border-0 text-capitalize">{worker.work_type}</span>
-                                                {worker.team_members?.map(tm => (
-                                                    <span key={tm._id} className="badge bg-light text-dark border fw-normal">
-                                                        {tm.type.replace(/_/g, ' ')}: <strong>{tm.workers}</strong>
+                                                <span className="badge bg-soft-primary text-primary border text-capitalize">
+                                                    {worker.work_type}
+                                                </span>
+                                                {worker.team_members?.map((tm, idx) => (
+                                                    <span key={idx} className="badge bg-light text-dark border text-capitalize">
+                                                        {tm.type?.replace(/_/g, ' ')}
                                                     </span>
                                                 ))}
                                             </div>
                                         </div>
                                     </div>
-                                    <button 
-                                        className="btn btn-primary btn-sm px-4 rounded-pill shadow-sm"
-                                        onClick={() => handleAssign(worker._id, 'self')}
-                                        disabled={btnLoading === `${worker._id}-self`}
-                                    >
-                                        {btnLoading === `${worker._id}-self` ? '...' : 'Assign'}
+                                    <button className="btn btn-primary btn-sm px-4 rounded-pill" onClick={() => handleAssign(worker._id)} disabled={btnLoading === worker._id}>
+                                        {btnLoading === worker._id ? 'Assigning...' : 'Assign'}
                                     </button>
                                 </div>
                             </div>
