@@ -100,7 +100,7 @@ const Sidebar = () => {
               </ul>
             </li>
 
-            {/* Manage FAQs Section - NEW */}
+            {/* Manage FAQs Section */}
             <li className="nxl-item nxl-hasmenu">
               <a href="javascript:void(0);" className="nxl-link">
                 <span className="nxl-micon"><i className="feather-help-circle"></i></span>
@@ -109,6 +109,19 @@ const Sidebar = () => {
               <ul className="nxl-submenu">
                 <li className="nxl-item"><Link className="nxl-link" to="/faqs">All FAQs</Link></li>
                 <li className="nxl-item"><Link className="nxl-link" to="/faqs/add">Add New FAQ</Link></li>
+              </ul>
+            </li>
+
+            {/* Marketing & Notifications Section - NEW */}
+            <li className="nxl-item nxl-hasmenu">
+              <a href="javascript:void(0);" className="nxl-link">
+                <span className="nxl-micon"><i className="feather-send"></i></span>
+                <span className="nxl-mtext">Marketing</span><span className="nxl-arrow"><i className="feather-chevron-right"></i></span>
+              </a>
+              <ul className="nxl-submenu">
+                <li className="nxl-item">
+                  <Link className="nxl-link" to="/notifications/send">Send Push Notification</Link>
+                </li>
               </ul>
             </li>
 
@@ -125,13 +138,6 @@ const Sidebar = () => {
                 <li className="nxl-item"><Link className="nxl-link" to="/admins/add">Add New Admin</Link></li>
               </ul>
             </li>
-
-            {/* <li className="nxl-item">
-              <Link to="/audit-logs" className="nxl-link">
-                <span className="nxl-micon"><i className="feather-activity"></i></span>
-                <span className="nxl-mtext">Audit Trail (Logs)</span>
-              </Link>
-            </li> */}
 
             <li className="nxl-item">
               <Link to="/settings/global-setting" className="nxl-link">
@@ -168,7 +174,7 @@ const Sidebar = () => {
             <li className="nxl-item">
               <Link className="nxl-link" to="/job-categories/banners">
                 <span className="nxl-micon">
-                  <i className="feather-image"></i> {/* icon added */}
+                  <i className="feather-image"></i>
                 </span>
                 <span className="nxl-mtext">Category Banners</span>
               </Link>

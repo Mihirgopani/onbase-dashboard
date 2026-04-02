@@ -54,6 +54,10 @@ import FaqDetails from "./views/faq/FaqDetails";
 
 import CategoryBanners from "./views/category-banners/CategoryBannerList";
 import EditCategoryBanner from "./views/category-banners/UpdateCategoryBanner";
+import SendNotification from "./views/pages/SendNotification";
+
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
@@ -87,12 +91,13 @@ function App() {
               <div className="layout-wrapper" style={{ marginTop: "0px" }}>
                 <Sidebar />
                 <Topbar />
-
+                <ToastContainer position="top-right" autoClose={3000} />
                 <main className="nxl-container">
                   <div className="nxl-content">
                     <Routes>
                       {/* Dashboard */}
                       <Route path="/" element={<Dashboard />} />
+                      
 
                       {/* Worker Management */}
                       <Route path="/workers" element={<AllWorkers />} />
@@ -144,6 +149,7 @@ function App() {
                       <Route path="/bookings/add" element={<AddBooking />} />
                       <Route path="/bookings/details/:id" element={<BookingDetails />} />
                       <Route path="/bookings/edit/:id" element={<EditBooking />} />
+                      <Route path="/notifications/send" element={<SendNotification />} />
 
                       <Route path="/bookings/:bookingId/assign/:itemIndex" element={<WorkerAssignment />} />
 
