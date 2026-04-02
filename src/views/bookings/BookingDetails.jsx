@@ -87,6 +87,7 @@ const BookingDetails = () => {
                                             <th className="ps-4">Worker Type</th>
                                             <th>OTP</th>
                                             <th>Assignment</th>
+                                            {/* <th>Booking Date</th> */}
                                             <th className="pe-4 text-end">Status</th>
                                         </tr>
                                     </thead>
@@ -123,6 +124,11 @@ const BookingDetails = () => {
                                                             </button>
                                                         )}
                                                     </td>
+                                                    {/* <td>
+    <div className="fw-semibold text-dark">
+        {new Date(booking.slot?.startDate).toLocaleDateString()}
+    </div>
+</td> */}
                                                     <td className="pe-4 text-end">
                                                         <span className={`badge border-0 rounded-pill ${statusInfo.class}`}>
                                                             {statusInfo.label}

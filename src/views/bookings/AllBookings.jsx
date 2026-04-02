@@ -69,15 +69,15 @@ const AllBookings = () => {
                     <div className="col-md-4">
                         <div className="position-relative">
                             <i className="feather-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-                            <input 
-                                type="text" 
-                                className="form-control ps-5 rounded-pill border-0 shadow-sm" 
-                                placeholder="Search by Phone Number..." 
+                            <input
+                                type="text"
+                                className="form-control ps-5 rounded-pill border-0 shadow-sm"
+                                placeholder="Search by Phone Number..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                             {searchQuery && (
-                                <button 
+                                <button
                                     className="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 text-decoration-none text-muted"
                                     onClick={() => setSearchQuery("")}
                                 >
@@ -133,8 +133,21 @@ const AllBookings = () => {
                                                 </small>
                                             </td>
                                             <td>
-                                                <div>{b.slot?.date}</div>
-                                                <small className="text-muted">{b.slot?.startTime}</small>
+                                                {b.slot?.date ? (
+                                                    <>
+                                                        <div>{b.slot.date}</div>
+                                                        <small className="text-muted">{b.slot?.startTime}</small>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <div>
+                                                            {b.slot?.startDate} → {b.slot?.endDate}
+                                                        </div>
+                                                        <small className="text-muted">
+                                                            {b.slot?.days} Days | {b.slot?.startTime}
+                                                        </small>
+                                                    </>
+                                                )}
                                             </td>
                                             <td><span className="fw-bold">₹{b.total_amount?.toLocaleString()}</span></td>
                                             <td>
@@ -155,9 +168,9 @@ const AllBookings = () => {
                                                     <Link to={`/bookings/edit/${b._id}`} className="btn btn-sm btn-light border" title="Edit">
                                                         <i className="feather-edit text-info"></i>
                                                     </Link>
-                                                    <button 
-                                                        onClick={() => handleDelete(b._id)} 
-                                                        className="btn btn-sm btn-light border" 
+                                                    <button
+                                                        onClick={() => handleDelete(b._id)}
+                                                        className="btn btn-sm btn-light border"
                                                         title="Delete Booking"
                                                     >
                                                         <i className="feather-trash-2 text-danger"></i>

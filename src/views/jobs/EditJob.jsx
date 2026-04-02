@@ -5,9 +5,10 @@ import api from '../../api/axios';
 const EditJob = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+
     const [loading, setLoading] = useState(false);
     const [categories, setCategories] = useState([]);
-    const [activeTab, setActiveTab] = useState('en'); // 'en', 'hi', 'gu'
+    const [activeTab, setActiveTab] = useState('en');
     const [formData, setFormData] = useState(null);
     const [files, setFiles] = useState({ cardImage: null, coverImage: null, otherImage: null });
 
@@ -18,91 +19,110 @@ const EditJob = () => {
                     api.get('/job-categories'),
                     api.get(`/jobs/${id}`)
                 ]);
+
                 setCategories(catRes.data);
-                
-                // Ensure otherlang exists to prevent mapping errors
+
                 const jobData = jobRes.data;
+
+                // ✅ Ensure otherlang exists
                 if (!jobData.otherlang) jobData.otherlang = [];
-                
-                // Ensure we have entries for hi and gu in otherlang
+
+                // ✅ Ensure hi & gu exist
                 ['hi', 'gu'].forEach(l => {
                     if (!jobData.otherlang.find(o => o.lang === l)) {
                         jobData.otherlang.push({
-                            lang: l, jobName: '', jobDescription: '',
-                            whatYouGet: [], whatYouNotGet: [], processSteps: [], faqs: []
+                            lang: l,
+                            jobName: '',
+                            jobDescription: '',
+                            whatYouGet: [],
+                            whatYouNotGet: [],
+                            processSteps: [],
+                            faqs: []
                         });
                     }
                 });
-                
+
                 setFormData(jobData);
             } catch (err) {
                 console.error("Error fetching data:", err);
             }
         };
+
         fetchData();
     }, [id]);
 
-    // Helper to get current content based on tab
+    // ✅ SAFE getter
     const getContent = () => {
+        if (!formData) return {};
         if (activeTab === 'en') return formData;
-        return formData.otherlang.find(o => o.lang === activeTab);
+        return formData.otherlang?.find(o => o.lang === activeTab) || {};
     };
 
     const handleFieldChange = (field, value) => {
         if (activeTab === 'en') {
-            setFormData({ ...formData, [field]: value });
+            setFormData(prev => ({ ...prev, [field]: value }));
         } else {
-            const newOtherLang = formData.otherlang.map(o => 
+            const newOtherLang = formData.otherlang.map(o =>
                 o.lang === activeTab ? { ...o, [field]: value } : o
             );
-            setFormData({ ...formData, otherlang: newOtherLang });
+            setFormData(prev => ({ ...prev, otherlang: newOtherLang }));
         }
     };
 
     const handleArrayChange = (index, field, value, section) => {
         if (activeTab === 'en') {
-            const newArray = [...formData[section]];
+            const newArray = [...(formData[section] || [])];
+
             if (field === null) newArray[index] = value;
             else newArray[index][field] = value;
-            setFormData({ ...formData, [section]: newArray });
+
+            setFormData(prev => ({ ...prev, [section]: newArray }));
         } else {
             const newOtherLang = formData.otherlang.map(o => {
                 if (o.lang === activeTab) {
-                    const newArray = [...o[section]];
+                    const newArray = [...(o[section] || [])];
+
                     if (field === null) newArray[index] = value;
                     else newArray[index][field] = value;
+
                     return { ...o, [section]: newArray };
                 }
                 return o;
             });
-            setFormData({ ...formData, otherlang: newOtherLang });
+
+            setFormData(prev => ({ ...prev, otherlang: newOtherLang }));
         }
     };
 
     const addRow = (section, template) => {
         if (activeTab === 'en' || section === 'pricing') {
-            setFormData({ ...formData, [section]: [...(formData[section] || []), template] });
+            setFormData(prev => ({
+                ...prev,
+                [section]: [...(prev[section] || []), template]
+            }));
         } else {
-            const newOtherLang = formData.otherlang.map(o => 
-                o.lang === activeTab ? { ...o, [section]: [...(o[section] || []), template] } : o
+            const newOtherLang = formData.otherlang.map(o =>
+                o.lang === activeTab
+                    ? { ...o, [section]: [...(o[section] || []), template] }
+                    : o
             );
-            setFormData({ ...formData, otherlang: newOtherLang });
+            setFormData(prev => ({ ...prev, otherlang: newOtherLang }));
         }
     };
 
     const removeRow = (index, section) => {
         if (activeTab === 'en' || section === 'pricing') {
-            const newArray = formData[section].filter((_, i) => i !== index);
-            setFormData({ ...formData, [section]: newArray });
+            const newArray = (formData[section] || []).filter((_, i) => i !== index);
+            setFormData(prev => ({ ...prev, [section]: newArray }));
         } else {
             const newOtherLang = formData.otherlang.map(o => {
                 if (o.lang === activeTab) {
-                    const newArray = o[section].filter((_, i) => i !== index);
+                    const newArray = (o[section] || []).filter((_, i) => i !== index);
                     return { ...o, [section]: newArray };
                 }
                 return o;
             });
-            setFormData({ ...formData, otherlang: newOtherLang });
+            setFormData(prev => ({ ...prev, otherlang: newOtherLang }));
         }
     };
 
@@ -111,26 +131,28 @@ const EditJob = () => {
         setLoading(true);
 
         const data = new FormData();
-        // Global & English Top Level
-        data.append('jobName', formData.jobName);
-        data.append('jobDescription', formData.jobDescription);
+
+        // ✅ Top level
+        data.append('jobName', formData.jobName || '');
+        data.append('jobDescription', formData.jobDescription || '');
         data.append('hindiTitle', formData.hindiTitle || '');
         data.append('gujaratiTitle', formData.gujaratiTitle || '');
         data.append('category', formData.category?._id || formData.category);
         data.append('status', formData.status);
 
-        // English Arrays
-        data.append('pricing', JSON.stringify(formData.pricing));
-        data.append('processSteps', JSON.stringify(formData.processSteps));
-        data.append('faqs', JSON.stringify(formData.faqs));
-        data.append('whatYouGet', JSON.stringify(formData.whatYouGet));
-        data.append('whatYouNotGet', JSON.stringify(formData.whatYouNotGet));
+        // ✅ Arrays safe
+        data.append('pricing', JSON.stringify(formData.pricing || []));
+        data.append('processSteps', JSON.stringify(formData.processSteps || []));
+        data.append('faqs', JSON.stringify(formData.faqs || []));
+        data.append('whatYouGet', JSON.stringify(formData.whatYouGet || []));
+        data.append('whatYouNotGet', JSON.stringify(formData.whatYouNotGet || []));
 
-        // The Translation Array (Hindi & Gujarati)
-        data.append('otherlang', JSON.stringify(formData.otherlang));
+        // ✅ IMPORTANT FIX
+        data.append('otherlang', JSON.stringify(formData.otherlang || []));
 
         if (files.cardImage) data.append('cardImage', files.cardImage);
         if (files.coverImage) data.append('coverImage', files.coverImage);
+        if (files.otherImage) data.append('otherImage', files.otherImage);
 
         try {
             await api.put(`/jobs/${id}`, data, {
