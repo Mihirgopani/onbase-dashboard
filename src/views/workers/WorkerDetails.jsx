@@ -6,6 +6,7 @@ const WorkerDetails = () => {
     const { id } = useParams();
     const [worker, setWorker] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isVerifying, setIsVerifying] = useState(false);
 
     useEffect(() => {
         const fetchWorker = async () => {
@@ -33,6 +34,24 @@ const WorkerDetails = () => {
         }
     };
 
+    const handleVerify = async () => {
+        if (!window.confirm("Are you sure you want to verify this worker? This will activate their profile.")) return;
+        
+        setIsVerifying(true);
+        try {
+            const res = await api.put(`/workers/${id}/verify`);
+            if (res.data.success) {
+                setWorker(res.data.data); // Update UI with new status
+                alert("Worker Verified Successfully!");
+            }
+        } catch (err) {
+            console.error("Verification Error:", err);
+            alert("Failed to verify worker.");
+        } finally {
+            setIsVerifying(false);
+        }
+    };
+
     return (
         <div className="main-content">
             {/* Header Section */}
@@ -53,9 +72,23 @@ const WorkerDetails = () => {
                 </div>
                 <div className="d-flex gap-2">
                     <Link to="/workers" className="btn btn-light border">Back to List</Link>
-                    <Link to={`/workers/edit/${id}`} className="btn btn-warning">
-                        <i className="feather-edit me-2"></i> Edit Profile
-                    </Link>
+                    <div className="d-flex gap-2">
+    <Link to="/workers" className="btn btn-light border">Back to List</Link>
+    
+    {worker.status !== 'active' && (
+        <button 
+            className="btn btn-success" 
+            onClick={handleVerify} 
+            disabled={isVerifying}
+        >
+            {isVerifying ? 'Verifying...' : 'Verify & Activate'}
+        </button>
+    )}
+
+    {/* <Link to={`/workers/edit/${id}`} className="btn btn-warning">
+        <i className="feather-edit me-2"></i> Edit Profile
+    </Link> */}
+</div>
                 </div>
             </div>
 

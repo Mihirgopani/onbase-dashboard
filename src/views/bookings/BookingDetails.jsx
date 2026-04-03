@@ -36,9 +36,16 @@ const BookingDetails = () => {
 
         if (s === 'approved') {
             if (hasStarted) {
-                return { label: 'WORK STARTED', class: 'bg-soft-primary text-primary' };
+                return { label: 'APPROVED', class: 'bg-soft-primary text-primary' };
             }
             return { label: 'APPROVED', class: 'bg-soft-info text-info' };
+        }
+
+        if (s === 'reached') {
+            if (hasStarted) {
+                return { label: 'WORK STARTED', class: 'bg-soft-primary text-primary' };
+            }
+            return { label: 'WORK STARTED', class: 'bg-soft-info text-info' };
         }
 
         if (s === 'assigned') {
@@ -86,6 +93,7 @@ const BookingDetails = () => {
                                         <tr className="small text-uppercase text-muted tracking-wider">
                                             <th className="ps-4">Worker Type</th>
                                             <th>OTP</th>
+                                            <th>Job Date</th>
                                             <th>Assignment</th>
                                             {/* <th>Booking Date</th> */}
                                             <th className="pe-4 text-end">Status</th>
@@ -95,7 +103,7 @@ const BookingDetails = () => {
                                         {booking.items?.map((item, index) => {
                                             const statusInfo = getStatusInfo(item);
                                             return (
-                                                <tr key={item._id}>
+                                                <tr key={item._id} className='py-5'>
                                                     <td className="ps-4 py-3">
                                                         <div className="fw-bold text-dark">{item.worker_type}</div>
                                                         <small className="text-muted">₹{item.price_per_unit} / {item.hours}hr(s)</small>
@@ -103,6 +111,11 @@ const BookingDetails = () => {
                                                     <td>
                                                         <code className="bg-light p-1 rounded text-primary fw-bold px-2">
                                                             {item.otp || 'N/A'}
+                                                        </code>
+                                                    </td>
+                                                    <td>
+                                                        <code className="p-1 rounded text-dark fw-bold px-2">
+                                                            {item.jobDate ? item.jobDate.split('T')[0] : 'N/A'}
                                                         </code>
                                                     </td>
                                                     <td>
@@ -118,17 +131,15 @@ const BookingDetails = () => {
                                                         ) : (
                                                             <button
                                                                 onClick={() => navigate(`/bookings/${booking._id}/assign/${index}`)}
-                                                                className="btn btn-sm btn-outline-primary px-3 rounded-pill"
+                                                                className="btn btn-md btn-outline-primary px-3 rounded-pill"
+                                                                style={{
+                                                                    border: "1px solid"
+                                                                }}
                                                             >
                                                                 Assign Now
                                                             </button>
                                                         )}
                                                     </td>
-                                                    {/* <td>
-    <div className="fw-semibold text-dark">
-        {new Date(booking.slot?.startDate).toLocaleDateString()}
-    </div>
-</td> */}
                                                     <td className="pe-4 text-end">
                                                         <span className={`badge border-0 rounded-pill ${statusInfo.class}`}>
                                                             {statusInfo.label}
