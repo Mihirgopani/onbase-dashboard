@@ -55,14 +55,19 @@ const WorkerAssignment = () => {
         if (currentBooking && targetItem) {
           const bookingPincode = currentBooking.service_address?.pincode;
           const matchedArea = areas.find(a => a.pincode === bookingPincode);
-          const matchedCategory = targetItem.category_name || "";
+
+          const selectedWorkType = targetItem.worker_type || "";
+          
+          // Find the job in allJobs to get its category
+          const matchedJob = jobs.find(j => j.jobName === selectedWorkType);
+          const matchedCategory = matchedJob?.category?.name || targetItem.category_name || "";
 
           setFilters({
             state: matchedArea?.city?.state?.name || "Gujarat",
             city: matchedArea?.city?.name || "Ahmedabad",
             area: matchedArea?.name || "",
             category: matchedCategory,
-            workType: targetItem.worker_type || ""
+            workType: selectedWorkType
           });
         }
 
@@ -81,13 +86,12 @@ const WorkerAssignment = () => {
     const targetSkill = normalize(filters.workType);
 
     return allWorkers.filter(worker => {
-
       const matchesSearch =
         !searchQuery ||
         worker.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         worker.phone_number?.includes(searchQuery);
 
-      // STATE MATCH (using worker's city)
+      // STATE MATCH
       const workerCityObj = locations.cities.find(c => c._id === worker.city);
       const workerState = workerCityObj?.state?.name || '';
       const matchesState = !filters.state || filters.state === workerState;
@@ -96,7 +100,7 @@ const WorkerAssignment = () => {
       const workerCityName = workerCityObj?.name;
       const matchesCity = !filters.city || workerCityName === filters.city;
 
-      // AREA MATCH (approx via city since worker has no area)
+      // AREA MATCH
       let matchesArea = true;
       if (filters.area) {
         const selectedArea = locations.areas.find(a => a.name === filters.area);
@@ -117,14 +121,26 @@ const WorkerAssignment = () => {
         );
 
       return matchesSearch && matchesState && matchesCity && matchesArea && matchesCategory && hasSkill;
-
     });
 
   }, [allWorkers, filters, searchQuery, locations]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
+
+    setFilters(prev => {
+      const updatedFilters = { ...prev, [name]: value };
+
+      // Auto-set category if workType changes
+      if (name === 'workType' && value) {
+        const selectedJob = allJobs.find(job => job.jobName === value);
+        if (selectedJob?.category?.name) {
+          updatedFilters.category = selectedJob.category.name;
+        }
+      }
+
+      return updatedFilters;
+    });
   };
 
   const handleAssign = async (workerId) => {
@@ -139,7 +155,7 @@ const WorkerAssignment = () => {
         tasks: [
           {
             work_type: targetItem.worker_type,
-            status: 'assigned',  // ✅ updated
+            status: 'assigned',
             assignee_type: 'self', 
             team_member_reference_id: null
           }
