@@ -107,18 +107,38 @@ const ExpansionManager = () => {
     const handleActivate = async (item, index) => {
         setActivatingId(index);
     
-        // We send the 'item' directly. 
-        // It contains: item.lat, item.lon, item.display_name, and item.address {}
-        console.log("Sending Raw OSM Item to Backend:", item);
-    
         try {
-            // Just pass 'item'. Your backend can now access:
-            // req.body.lat, req.body.lon, req.body.address.state, etc.
-            const res = await api.post('/locations/activate', item);
-            
+            let itemToSend = { ...item };
+    
+            // Ensure address exists
+            if (!itemToSend.address) itemToSend.address = {};
+    
+            // Map postcode to pincode if pincode doesn't exist
+            if (!itemToSend.address.pincode) {
+                if (itemToSend.address.postcode) {
+                    itemToSend.address.pincode = itemToSend.address.postcode;
+                } else {
+                    // Ask user manually if postcode is also missing
+                    const manualPincode = prompt(
+                        `Pincode not found for ${item.display_name}. Please enter pincode manually:`
+                    );
+    
+                    if (!manualPincode || !/^\d{5,6}$/.test(manualPincode.trim())) {
+                        alert("Invalid pincode entered. Activation cancelled.");
+                        setActivatingId(null);
+                        return;
+                    }
+    
+                    itemToSend.address.pincode = manualPincode.trim();
+                }
+            }
+    
+            console.log("Sending Item to Backend:", itemToSend);
+    
+            const res = await api.post('/locations/activate', itemToSend);
+    
             alert("Area Activated!");
-            
-            // UI Updates
+    
             setResults(prev => prev.filter((_, i) => i !== index));
             setSelectedLocation(null);
         } catch (err) {

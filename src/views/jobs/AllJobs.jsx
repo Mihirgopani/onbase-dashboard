@@ -23,12 +23,12 @@ const AllJobs = () => {
     const handleStatusToggle = async (jobId, currentStatus) => {
         const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
         setTogglingId(jobId);
-    
+
         try {
             // Use the standard PUT route
             await api.put(`/jobs/${jobId}`, { status: newStatus });
-            
-            setJobs(jobs.map(job => 
+
+            setJobs(jobs.map(job =>
                 job._id === jobId ? { ...job, status: newStatus } : job
             ));
         } catch (err) {
@@ -78,13 +78,13 @@ const AllJobs = () => {
                                     jobs.map(job => (
                                         <tr key={job._id}>
                                             <td className="ps-4">
-                                                <div className="d-flex align-items-center">
-                                                <div className="avatar avatar-sm bg-soft-primary text-primary rounded me-3 fw-bold d-flex align-items-center justify-content-center">
-  {job.jobName.charAt(0)}
-</div>
-                                                    <span className="fw-bold text-dark">{job.jobName}</span>
-                                                </div>
-                                            </td>
+  <Link to={`/jobs/details/${job._id}`} className="text-decoration-none text-dark d-flex align-items-center">
+    <div className="avatar avatar-sm bg-soft-primary text-primary rounded me-3 fw-bold d-flex align-items-center justify-content-center">
+      {job.jobName.charAt(0)}
+    </div>
+    <span className="fw-bold">{job.jobName}</span>
+  </Link>
+</td>
                                             <td>
                                                 <span className="badge bg-soft-info text-info border-0">
                                                     {job.category?.name || 'Uncategorized'}
@@ -92,9 +92,9 @@ const AllJobs = () => {
                                             </td>
                                             <td>
                                                 <div className="form-check form-switch custom-switch">
-                                                    <input 
-                                                        className="form-check-input cursor-pointer" 
-                                                        type="checkbox" 
+                                                    <input
+                                                        className="form-check-input cursor-pointer"
+                                                        type="checkbox"
                                                         role="switch"
                                                         id={`switch-${job._id}`}
                                                         checked={job.status === 'active'}
@@ -111,8 +111,8 @@ const AllJobs = () => {
                                                     <Link to={`/jobs/edit/${job._id}`} className="btn btn-light btn-sm border">
                                                         <i className="feather-edit-3"></i>
                                                     </Link>
-                                                    <button 
-                                                        onClick={() => handleDelete(job._id)} 
+                                                    <button
+                                                        onClick={() => handleDelete(job._id)}
                                                         className="btn btn-soft-danger btn-sm border"
                                                     >
                                                         <i className="feather-trash-2"></i>

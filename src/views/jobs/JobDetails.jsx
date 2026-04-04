@@ -5,8 +5,8 @@ import api from '../../api/axios';
 const JobDetails = () => {
     const { id } = useParams();
     const [job, setJob] = useState(null);
+    const [selectedLang, setSelectedLang] = useState('default');
 
-    // Replace this with your actual production backend URL or environment variable
     const baseURL = "http://localhost:5001";
 
     useEffect(() => {
@@ -19,10 +19,34 @@ const JobDetails = () => {
         </div>
     );
 
+    // Determine content based on selected language
+    const getLangContent = () => {
+        if (selectedLang === 'default') return job;
+        const langObj = job.otherlang?.find(l => l.lang === selectedLang);
+        return langObj || job;
+    };
+
+    const content = getLangContent();
+
     return (
         <div className="main-content px-4 py-4">
             <div className="row justify-content-center">
                 <div className="col-lg-10">
+                    {/* Language Tabs */}
+                    <div className="mb-3 d-flex">
+                        <button className={`btn btn-sm me-2 ${selectedLang === 'default' ? 'btn-primary' : 'btn-outline-primary'}`}
+                            onClick={() => setSelectedLang('default')}>
+                            Default
+                        </button>
+                        {job.otherlang?.map((lang, i) => (
+                            <button key={i}
+                                className={`btn btn-sm me-2 ${selectedLang === lang.lang ? 'btn-primary' : 'btn-outline-primary'}`}
+                                onClick={() => setSelectedLang(lang.lang)}>
+                                {lang.lang.toUpperCase()}
+                            </button>
+                        ))}
+                    </div>
+
                     {/* Header Card with Banner */}
                     <div className="card shadow-sm border-0 overflow-hidden mb-4">
                         <div style={{ height: '250px', width: '100%', backgroundColor: '#1e293b' }}>
@@ -30,7 +54,7 @@ const JobDetails = () => {
                                 <img 
                                     src={`${baseURL}${job.coverImage}`} 
                                     alt="Cover" 
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8, zIndex:0}}
                                 />
                             )}
                         </div>
@@ -46,7 +70,7 @@ const JobDetails = () => {
                                     />
                                 </div>
                                 <div className="pb-2">
-                                    <h2 className="fw-bold mb-1">{job.jobName}</h2>
+                                    <h2 className="fw-bold mb-1">{content.jobName}</h2>
                                     <span className="badge bg-primary px-3 py-2 mb-2">
                                         {job.category?.name || 'Service Category'}
                                     </span>
@@ -66,14 +90,14 @@ const JobDetails = () => {
                                 <div className="col-md-7">
                                     <section className="mb-4">
                                         <h5 className="fw-bold">Description</h5>
-                                        <p className="text-secondary" style={{ lineHeight: '1.6' }}>{job.jobDescription || "No description provided."}</p>
+                                        <p className="text-secondary" style={{ lineHeight: '1.6' }}>{content.jobDescription || "No description provided."}</p>
                                     </section>
 
                                     <div className="row">
                                         <div className="col-md-6 mb-4">
                                             <h6 className="fw-bold text-success"><i className="bi bi-check-circle-fill me-2"></i>What's Included</h6>
                                             <ul className="list-unstyled small">
-                                                {job.whatYouGet?.map((item, i) => (
+                                                {content.whatYouGet?.map((item, i) => (
                                                     <li key={i} className="mb-2 text-secondary">• {item}</li>
                                                 ))}
                                             </ul>
@@ -81,7 +105,7 @@ const JobDetails = () => {
                                         <div className="col-md-6 mb-4">
                                             <h6 className="fw-bold text-danger"><i className="bi bi-x-circle-fill me-2"></i>What's Excluded</h6>
                                             <ul className="list-unstyled small">
-                                                {job.whatYouNotGet?.map((item, i) => (
+                                                {content.whatYouNotGet?.map((item, i) => (
                                                     <li key={i} className="mb-2 text-secondary">• {item}</li>
                                                 ))}
                                             </ul>
@@ -91,7 +115,7 @@ const JobDetails = () => {
                                     <section className="mb-4">
                                         <h5 className="fw-bold mb-3">Service Process</h5>
                                         <div className="ms-2">
-                                            {job.processSteps?.map((step, i) => (
+                                            {content.processSteps?.map((step, i) => (
                                                 <div key={i} className="d-flex mb-3">
                                                     <div className="me-3 mt-1">
                                                         <span className="badge bg-light text-dark border rounded-circle" style={{ width: '25px', height: '25px' }}>{i + 1}</span>
@@ -123,7 +147,7 @@ const JobDetails = () => {
                                     <section>
                                         <h5 className="fw-bold mb-3">Common FAQs</h5>
                                         <div className="accordion accordion-flush border rounded" id="faqAccordion">
-                                            {job.faqs?.map((faq, i) => (
+                                            {content.faqs?.map((faq, i) => (
                                                 <div className="accordion-item" key={i}>
                                                     <h2 className="accordion-header">
                                                         <button className="accordion-button collapsed py-2 small fw-bold" type="button" data-bs-toggle="collapse" data-bs-target={`#faq${i}`}>
