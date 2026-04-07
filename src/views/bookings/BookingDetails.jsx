@@ -7,56 +7,183 @@ const BookingDetails = () => {
     const navigate = useNavigate();
     const [booking, setBooking] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState(null); // tracks which item is loading
+    const [otpInputs, setOtpInputs] = useState({}); // stores OTP per itemId
+
+    const fetchDetails = async () => {
+        try {
+            const res = await api.get(`/bookings/${id}`);
+            setBooking(res.data.data);
+        } catch (err) {
+            console.error("Error fetching details", err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchDetails = async () => {
-            try {
-                const res = await api.get(`/bookings/${id}`);
-                setBooking(res.data.data);
-            } catch (err) {
-                console.error("Error fetching details", err);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchDetails();
     }, [id]);
 
-    /**
-     * Maps database status and timestamps to human-readable statuses:
-     * Pending, Assigned, Approved, Work Started, Finished
-     */
     const getStatusInfo = (item) => {
         const s = item?.status?.toLowerCase();
         const hasStarted = !!item?.started_at;
 
-        if (s === 'pending') {
-            return { label: 'PENDING', class: 'bg-soft-warning text-warning' };
-        }
-
+        if (s === 'pending') return { label: 'PENDING', class: 'bg-soft-warning text-warning' };
         if (s === 'approved') {
-            if (hasStarted) {
-                return { label: 'APPROVED', class: 'bg-soft-primary text-primary' };
-            }
+            if (hasStarted) return { label: 'APPROVED', class: 'bg-soft-primary text-primary' };
             return { label: 'APPROVED', class: 'bg-soft-info text-info' };
         }
-
         if (s === 'reached') {
-            if (hasStarted) {
-                return { label: 'WORK STARTED', class: 'bg-soft-primary text-primary' };
-            }
+            if (hasStarted) return { label: 'WORK STARTED', class: 'bg-soft-primary text-primary' };
             return { label: 'WORK STARTED', class: 'bg-soft-info text-info' };
         }
-
-        if (s === 'assigned') {
-            return { label: 'ASSIGNED', class: 'bg-soft-info text-info' };
-        }
-
-        if (s === 'finished' || s === 'completed') {
-            return { label: 'FINISHED', class: 'bg-soft-success text-success' };
-        }
-
+        if (s === 'assigned') return { label: 'ASSIGNED', class: 'bg-soft-info text-info' };
+        if (s === 'finished' || s === 'completed') return { label: 'FINISHED', class: 'bg-soft-success text-success' };
         return { label: s?.toUpperCase() || 'UNKNOWN', class: 'bg-soft-secondary text-secondary' };
+    };
+
+    // ✅ Approve Job
+    const handleApprove = async (item) => {
+        if (!item.assigned_worker?._id) return alert("No worker assigned yet.");
+        setActionLoading(`approve-${item._id}`);
+        try {
+            await api.post('/app/worker/approve-job', {
+                bookingId: booking._id,
+                itemId: item._id,
+                workerId: item.assigned_worker._id,
+            });
+            await fetchDetails();
+        } catch (err) {
+            alert("Approve failed: " + (err.response?.data?.message || err.message));
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    // ✅ Start Work (requires OTP)
+    const handleStartWork = async (item) => {
+        const otp = otpInputs[item._id];
+        if (!otp || otp.length < 4) return alert("Please enter the 4-digit OTP.");
+        setActionLoading(`start-${item._id}`);
+        try {
+            await api.post('/app/worker/start-work', {
+                bookingId: booking._id,
+                itemId: item._id,
+                workerId: item.assigned_worker._id,
+                otp,
+            });
+            await fetchDetails();
+        } catch (err) {
+            alert("Start work failed: " + (err.response?.data?.message || err.message));
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    // ✅ End Work
+    const handleEndWork = async (item) => {
+        if (!window.confirm("Mark this job as finished?")) return;
+        setActionLoading(`end-${item._id}`);
+        try {
+            await api.post('/app/worker/end-work', {
+                bookingId: booking._id,
+                itemId: item._id,
+                workerId: item.assigned_worker._id,
+            });
+            await fetchDetails();
+        } catch (err) {
+            alert("End work failed: " + (err.response?.data?.message || err.message));
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    // ✅ Render action button based on item status
+    const renderActionButton = (item) => {
+        const s = item?.status?.toLowerCase();
+
+        // Not assigned yet — show Assign Now
+        if (!item.assigned_worker) {
+            return (
+                <button
+                    onClick={() => navigate(`/bookings/${booking._id}/assign/${booking.items.indexOf(item)}`)}
+                    className="btn btn-sm btn-outline-primary rounded-pill px-3"
+                >
+                    Assign Now
+                </button>
+            );
+        }
+
+        // Assigned but not approved
+        if (s === 'assigned') {
+            return (
+                <button
+                    className="btn btn-sm btn-success rounded-pill px-3"
+                    onClick={() => handleApprove(item)}
+                    disabled={actionLoading === `approve-${item._id}`}
+                >
+                    {actionLoading === `approve-${item._id}`
+                        ? <span className="spinner-border spinner-border-sm"></span>
+                        : <><i className="feather-check me-1"></i>Approve Job</>
+                    }
+                </button>
+            );
+        }
+
+        // Approved — show OTP input + Mark Arrived
+        if (s === 'approved') {
+            return (
+                <div className="d-flex align-items-center gap-2">
+                    <input
+                        type="text"
+                        maxLength={4}
+                        placeholder="Enter OTP"
+                        className="form-control form-control-sm"
+                        style={{ width: '100px' }}
+                        value={otpInputs[item._id] || ''}
+                        onChange={e => setOtpInputs(prev => ({ ...prev, [item._id]: e.target.value }))}
+                    />
+                    <button
+                        className="btn btn-sm btn-primary rounded-pill px-3"
+                        onClick={() => handleStartWork(item)}
+                        disabled={actionLoading === `start-${item._id}`}
+                    >
+                        {actionLoading === `start-${item._id}`
+                            ? <span className="spinner-border spinner-border-sm"></span>
+                            : <><i className="feather-map-pin me-1"></i>Mark Arrived</>
+                        }
+                    </button>
+                </div>
+            );
+        }
+
+        // Reached / Work Started — show End Job
+        if (s === 'reached') {
+            return (
+                <button
+                    className="btn btn-sm btn-danger rounded-pill px-3"
+                    onClick={() => handleEndWork(item)}
+                    disabled={actionLoading === `end-${item._id}`}
+                >
+                    {actionLoading === `end-${item._id}`
+                        ? <span className="spinner-border spinner-border-sm"></span>
+                        : <><i className="feather-stop-circle me-1"></i>End Job</>
+                    }
+                </button>
+            );
+        }
+
+        // Finished
+        if (s === 'finished' || s === 'completed') {
+            return (
+                <span className="badge bg-soft-success text-success rounded-pill px-3 py-2">
+                    <i className="feather-check-circle me-1"></i>Completed
+                </span>
+            );
+        }
+
+        return null;
     };
 
     if (loading) return (
@@ -90,20 +217,20 @@ const BookingDetails = () => {
                             <div className="table-responsive">
                                 <table className="table align-middle mb-0">
                                     <thead className="table-light">
-                                        <tr className="small text-uppercase text-muted tracking-wider">
+                                        <tr className="small text-uppercase text-muted">
                                             <th className="ps-4">Worker Type</th>
                                             <th>OTP</th>
                                             <th>Job Date</th>
                                             <th>Assignment</th>
-                                            {/* <th>Booking Date</th> */}
-                                            <th className="pe-4 text-end">Status</th>
+                                            <th>Status</th>
+                                            <th className="pe-4 text-end">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {booking.items?.map((item, index) => {
                                             const statusInfo = getStatusInfo(item);
                                             return (
-                                                <tr key={item._id} className='py-5'>
+                                                <tr key={item._id}>
                                                     <td className="ps-4 py-3">
                                                         <div className="fw-bold text-dark">{item.worker_type}</div>
                                                         <small className="text-muted">₹{item.price_per_unit} / {item.hours}hr(s)</small>
@@ -121,26 +248,24 @@ const BookingDetails = () => {
                                                     <td>
                                                         {item.assigned_worker ? (
                                                             <div className="d-flex align-items-center">
-                                                                <div className="avatar-xs bg-soft-info text-info rounded-circle me-2 d-flex align-items-center justify-content-center" style={{ width: '24px', height: '24px' }}>
+                                                                <div
+                                                                    className="bg-soft-info text-info rounded-circle me-2 d-flex align-items-center justify-content-center"
+                                                                    style={{ width: '24px', height: '24px' }}
+                                                                >
                                                                     <i className="feather-user" style={{ fontSize: '12px' }}></i>
                                                                 </div>
-                                                                <span className="fw-semibold text-dark">
-                                                                    {item.assigned_worker.name}
-                                                                </span>
+                                                                <div>
+                                                                    <div className="fw-semibold text-dark small">{item.assigned_worker.name}</div>
+                                                                    <div className="text-muted" style={{ fontSize: '11px' }}>
+                                                                        {item.assigned_worker.phone_number}
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         ) : (
-                                                            <button
-                                                                onClick={() => navigate(`/bookings/${booking._id}/assign/${index}`)}
-                                                                className="btn btn-md btn-outline-primary px-3 rounded-pill"
-                                                                style={{
-                                                                    border: "1px solid"
-                                                                }}
-                                                            >
-                                                                Assign Now
-                                                            </button>
+                                                            <span className="text-muted small">Unassigned</span>
                                                         )}
                                                     </td>
-                                                    <td className="pe-4 text-end">
+                                                    <td>
                                                         <span className={`badge border-0 rounded-pill ${statusInfo.class}`}>
                                                             {statusInfo.label}
                                                         </span>
@@ -149,6 +274,10 @@ const BookingDetails = () => {
                                                                 Started: {new Date(item.started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                             </div>
                                                         )}
+                                                    </td>
+                                                    {/* ✅ Action Column */}
+                                                    <td className="pe-4 text-end">
+                                                        {renderActionButton(item)}
                                                     </td>
                                                 </tr>
                                             );
@@ -184,7 +313,7 @@ const BookingDetails = () => {
                     )}
                 </div>
 
-                {/* Sidebar: Customer & Slot Details */}
+                {/* Sidebar */}
                 <div className="col-lg-4">
                     <div className="card shadow-sm border-0 mb-4" style={{ borderRadius: '15px' }}>
                         <div className="card-header bg-white py-3 border-0">
@@ -192,7 +321,10 @@ const BookingDetails = () => {
                         </div>
                         <div className="card-body pt-0">
                             <div className="d-flex align-items-center mb-4">
-                                <div className="avatar-md bg-soft-primary text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style={{ width: '45px', height: '45px' }}>
+                                <div
+                                    className="bg-soft-primary text-primary rounded-circle d-flex align-items-center justify-content-center me-3"
+                                    style={{ width: '45px', height: '45px' }}
+                                >
                                     <i className="feather-user fs-5"></i>
                                 </div>
                                 <div>
@@ -201,7 +333,7 @@ const BookingDetails = () => {
                                 </div>
                             </div>
 
-                            <label className="text-uppercase text-muted small fw-bold mb-2 d-block tracking-wider">Service Site</label>
+                            <label className="text-uppercase text-muted small fw-bold mb-2 d-block">Service Site</label>
                             <div className="bg-light p-3 rounded-3 mb-4">
                                 <p className="small text-dark fw-bold mb-1">{booking.service_address?.houseDetails}</p>
                                 <p className="small text-muted mb-0">
