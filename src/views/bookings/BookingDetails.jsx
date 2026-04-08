@@ -25,9 +25,37 @@ const BookingDetails = () => {
         fetchDetails();
     }, [id]);
 
+    // ✅ Check if job date is today
+    const isJobDateToday = (jobDate) => {
+        if (!jobDate) return false;
+        const today = new Date().toISOString().split('T')[0];
+        const itemDate = jobDate.split('T')[0];
+        return today === itemDate;
+    };
+
+    // ✅ Check if job date is expired
+    const isJobExpired = (jobDate, status) => {
+        if (!jobDate || status === 'finished' || status === 'completed') return false;
+        
+        // Create a new Date object for the job date and remove the time part
+        const jobDateObj = new Date(jobDate);
+        jobDateObj.setHours(0, 0, 0, 0); // Reset the time to midnight for comparison
+    
+        // Get today's date without time
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Reset the time to midnight for comparison
+    
+        // Compare job date with today's date
+        return jobDateObj < today; // It's expired if the job date is before today
+    };
+
     const getStatusInfo = (item) => {
         const s = item?.status?.toLowerCase();
         const hasStarted = !!item?.started_at;
+
+        if (isJobExpired(item.jobDate, s)) {
+            return { label: 'EXPIRED', class: 'bg-soft-danger text-danger' };
+        }
 
         if (s === 'pending') return { label: 'PENDING', class: 'bg-soft-warning text-warning' };
         if (s === 'approved') {
@@ -102,6 +130,17 @@ const BookingDetails = () => {
     // ✅ Render action button based on item status
     const renderActionButton = (item) => {
         const s = item?.status?.toLowerCase();
+        const isTodayJobDate = isJobDateToday(item.jobDate);
+        const isExpired = isJobExpired(item.jobDate, s);
+
+        // If expired, show no action button
+        if (isExpired) {
+            return (
+                <span className="badge bg-soft-danger text-danger rounded-pill px-3 py-2">
+                    <i className="feather-x-circle me-1"></i>Expired
+                </span>
+            );
+        }
 
         // Not assigned yet — show Assign Now
         if (!item.assigned_worker) {
@@ -115,24 +154,8 @@ const BookingDetails = () => {
             );
         }
 
-        // Assigned but not approved
-        if (s === 'assigned') {
-            return (
-                <button
-                    className="btn btn-sm btn-success rounded-pill px-3"
-                    onClick={() => handleApprove(item)}
-                    disabled={actionLoading === `approve-${item._id}`}
-                >
-                    {actionLoading === `approve-${item._id}`
-                        ? <span className="spinner-border spinner-border-sm"></span>
-                        : <><i className="feather-check me-1"></i>Approve Job</>
-                    }
-                </button>
-            );
-        }
-
-        // Approved — show OTP input + Mark Arrived
-        if (s === 'approved') {
+        // Other actions as usual (approve, start, etc.)
+        if (s === 'assigned' && isTodayJobDate) {
             return (
                 <div className="d-flex align-items-center gap-2">
                     <input
@@ -157,6 +180,7 @@ const BookingDetails = () => {
                 </div>
             );
         }
+
 
         // Reached / Work Started — show End Job
         if (s === 'reached') {

@@ -23,7 +23,7 @@ const Sidebar = () => {
         <div className="m-header">
           <Link to="/" className="b-brand">
             <img
-              src="/assets/images/logo.webp"
+              src="/assets/images/logo.png"
               alt="Logo"
               className="logo"
               style={{ height: "100px", objectFit: "contain" }}
