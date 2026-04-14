@@ -56,6 +56,9 @@ import CategoryBanners from "./views/category-banners/CategoryBannerList";
 import EditCategoryBanner from "./views/category-banners/UpdateCategoryBanner";
 import SendNotification from "./views/pages/SendNotification";
 
+import AllCharges from "./views/bookings/AllCharges";
+import ChargeForm from "./views/bookings/ChargeForm";
+
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -97,7 +100,7 @@ function App() {
                     <Routes>
                       {/* Dashboard */}
                       <Route path="/" element={<Dashboard />} />
-                      
+
 
                       {/* Worker Management */}
                       <Route path="/workers" element={<AllWorkers />} />
@@ -150,6 +153,10 @@ function App() {
                       <Route path="/bookings/details/:id" element={<BookingDetails />} />
                       <Route path="/bookings/edit/:id" element={<EditBooking />} />
                       <Route path="/notifications/send" element={<SendNotification />} />
+
+                      <Route path="/charges" element={<AllCharges />} />
+                      <Route path="/charges/add" element={<ChargeForm />} />
+                      <Route path="/charges/edit/:id" element={<ChargeForm />} />
 
                       <Route path="/bookings/:bookingId/assign/:itemIndex" element={<WorkerAssignment />} />
 

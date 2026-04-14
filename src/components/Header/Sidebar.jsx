@@ -52,6 +52,17 @@ const Sidebar = () => {
               </ul>
             </li>
 
+            <li className="nxl-item nxl-hasmenu">
+              <a href="javascript:void(0);" className="nxl-link">
+                <span className="nxl-micon"><i className="feather-dollar-sign"></i></span>
+                <span className="nxl-mtext">Manage Charges</span><span className="nxl-arrow"><i className="feather-chevron-right"></i></span>
+              </a>
+              <ul className="nxl-submenu">
+                <li className="nxl-item"><Link className="nxl-link" to="/charges">All Charges</Link></li>
+                <li className="nxl-item"><Link className="nxl-link" to="/charges/add">Add New Charge</Link></li>
+              </ul>
+            </li>
+
             {/* Workers Section */}
             <li className="nxl-item nxl-hasmenu">
               <a href="javascript:void(0);" className="nxl-link">
