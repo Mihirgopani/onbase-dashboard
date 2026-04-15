@@ -59,7 +59,11 @@ const AddJob = () => {
       ],
       faqs: [
         { question: 'क्या कर्मचारी सत्यापित हैं?', answer: 'हाँ, हर कर्मचारी की पहचान और पृष्ठभूमि सत्यापित होती है।' },
-        { question: 'क्या मैं उनकी शिफ्ट बढ़ा सकता हूँ?', answer: 'हाँ, आप ऐप या सपोर्ट के माध्यम से विस्तार का अनुरोध कर सकते हैं।' }
+        { question: 'क्या मैं उनकी शिफ्ट बढ़ा सकता हूँ?', answer: 'हाँ, आप ऐप या सपोर्ट के माध्यम से विस्तार का अनुरोध कर सकते हैं।' },
+        { question: 'क्या वे अपने औजार लाते हैं?', answer: 'बुनियादी हाथ के औजार आमतौर पर कार्यकर्ता द्वारा लाए जाते हैं, लेकिन भारी मशीनरी या विशेष निर्माण सामग्री बुकिंग में उल्लेख न होने पर ग्राहक को स्वयं व्यवस्थित करनी होगी।' },
+        { question: 'अगर कोई कार्यकर्ता अंतिम समय में रद्द करे तो?', answer: 'हम तुरंत हमारे सत्यापित पूल से एक प्रतिस्थापन को प्राथमिकता देंगे या यदि तुरंत विकल्प न मिले तो पूरा रिफंड प्रदान करेंगे।' },
+        { question: 'मूल्य निर्धारण कैसे होता है?', answer: 'मूल्य निर्धारण प्रति कार्यकर्ता मानक 8 घंटे की शिफ्ट पर आधारित है। दरें पहले से स्पष्ट रूप से दिखाई जाती हैं। ओवरटाइम एक निश्चित प्रति घंटे दर पर बिल किया जाता है।' },
+
       ]
     },
     gu: {
@@ -83,7 +87,10 @@ const AddJob = () => {
       ],
       faqs: [
         { question: 'શું કર્મચારીઓ ચકાસાયેલા છે?', answer: 'હાં, દરેક કર્મચારીનું આઈડી અને પૃષ્ઠભૂમિ ચકાસાય છે.' },
-        { question: 'શું હું તેમની શિફ્ટ લંબાવી શકું?', answer: 'હાં, તમે એપ અથવા સપોર્ટ દ્વારા વિસ્તરણનો વિનંતી કરી શકો છો.' }
+        { question: 'શું હું તેમની શિફ્ટ લંબાવી શકું?', answer: 'હાં, તમે એપ અથવા સપોર્ટ દ્વારા વિસ્તરણનો વિનંતી કરી શકો છો.' },
+        { question: 'શું તેઓ પોતાના ઓજાર લાવે છે?', answer: 'સામાન્ય રીતે બેઝિક હાથ-ઓજાર કામદાર દ્વારા લવાય છે, પરંતુ ભારે મશીનરી અથવા ખાસ બાંધકામ સામગ્રી બુકિંગમાં ઉલ્લેખ ન હોય તો ક્લાઈન્ટે ગોઠવવી પડશે.' },
+        { question: 'જો કામદાર છેલ્લી ઘડીએ રદ કરે તો?', answer: 'અમે અમારા ચકાસાયેલ પૂલમાંથી તરત જ રિપ્લેસમેન્ટ પ્રાથમિકતા આપીશું અથવા જો તાત્કાલિક વિકલ્પ ન મળે તો સંપૂર્ણ રિફંડ આપીશું.' },
+        { question: 'ભાવ કેવી રીતે ગણાય છે?', answer: 'ભાવ પ્રતિ કામદાર સ્ટાન્ડર્ડ 8 કલાકની શિફ્ટ પર આધારિત છે, દરો પહેલેથી સ્પષ્ટ રીતે દર્શાવવામાં આવે છે. ઓવરટાઇમ નિશ્ચિત કલાક-દર પ્રમાણે બિલ થશે.' },
       ]
     }
   };
@@ -143,9 +150,9 @@ const AddJob = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-  
+
     const data = new FormData();
-  
+
     // Root-level English fields
     data.append('jobName', multiLangData.en.title);
     data.append('jobDescription', multiLangData.en.description);
@@ -155,12 +162,12 @@ const AddJob = () => {
     data.append('faqs', JSON.stringify(multiLangData.en.faqs));
     data.append('pricing', JSON.stringify(pricing));
     data.append('category', category);
-  
+
     // Images
     if (files.cardImage) data.append('cardImage', files.cardImage);
     if (files.coverImage) data.append('coverImage', files.coverImage);
     if (files.otherImage) data.append('otherImage', files.otherImage);
-  
+
     // Multilingual content
     const otherlang = [];
     ['hi', 'gu'].forEach(lang => {
@@ -176,10 +183,10 @@ const AddJob = () => {
         });
       }
     });
-  
+
     // ✅ Send as string, backend must parse
     if (otherlang.length) data.append('otherlang', JSON.stringify(otherlang));
-  
+
     try {
       await api.post('/jobs', data, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -197,43 +204,43 @@ const AddJob = () => {
       <form onSubmit={handleSubmit}>
         {/* Default Content Toggle */}
         <div className='row'>
-        <div className="mb-3 col-6">
-          <label className="form-label me-3">Default Content:</label>
-          <div className="form-check form-check-inline">
-            <input className="form-check-input" type="radio" name="defaultToggle" checked={useDefault} onChange={() => handleDefaultToggle(true)} />
-            <label className="form-check-label">ON</label>
+          <div className="mb-3 col-6">
+            <label className="form-label me-3">Default Content:</label>
+            <div className="form-check form-check-inline">
+              <input className="form-check-input" type="radio" name="defaultToggle" checked={useDefault} onChange={() => handleDefaultToggle(true)} />
+              <label className="form-check-label">ON</label>
+            </div>
+            <div className="form-check form-check-inline">
+              <input className="form-check-input" type="radio" name="defaultToggle" checked={!useDefault} onChange={() => handleDefaultToggle(false)} />
+              <label className="form-check-label">OFF</label>
+            </div>
           </div>
-          <div className="form-check form-check-inline">
-            <input className="form-check-input" type="radio" name="defaultToggle" checked={!useDefault} onChange={() => handleDefaultToggle(false)} />
-            <label className="form-check-label">OFF</label>
-          </div>
-        </div>
 
-        {/* Language Tabs */}
-        <div className="mb-3 col-6 d-flex align-items-center justify-content-end">
-  <label className="form-label me-3 mb-0">Language:</label>
-  <button
-    type="button"
-    className={`btn btn-sm ${activeLang === 'en' ? 'btn-primary' : 'btn-light'} me-2`}
-    onClick={() => switchLang('en')}
-  >
-    English
-  </button>
-  <button
-    type="button"
-    className={`btn btn-sm ${activeLang === 'hi' ? 'btn-primary' : 'btn-light'} me-2`}
-    onClick={() => switchLang('hi')}
-  >
-    Hindi
-  </button>
-  <button
-    type="button"
-    className={`btn btn-sm ${activeLang === 'gu' ? 'btn-primary' : 'btn-light'}`}
-    onClick={() => switchLang('gu')}
-  >
-    Gujarati
-  </button>
-</div>
+          {/* Language Tabs */}
+          <div className="mb-3 col-6 d-flex align-items-center justify-content-end">
+            <label className="form-label me-3 mb-0">Language:</label>
+            <button
+              type="button"
+              className={`btn btn-sm ${activeLang === 'en' ? 'btn-primary' : 'btn-light'} me-2`}
+              onClick={() => switchLang('en')}
+            >
+              English
+            </button>
+            <button
+              type="button"
+              className={`btn btn-sm ${activeLang === 'hi' ? 'btn-primary' : 'btn-light'} me-2`}
+              onClick={() => switchLang('hi')}
+            >
+              Hindi
+            </button>
+            <button
+              type="button"
+              className={`btn btn-sm ${activeLang === 'gu' ? 'btn-primary' : 'btn-light'}`}
+              onClick={() => switchLang('gu')}
+            >
+              Gujarati
+            </button>
+          </div>
         </div>
 
         <div className="row">
@@ -278,34 +285,34 @@ const AddJob = () => {
                   <button type="button" className="btn btn-sm btn-dark" onClick={() => setPricing([...pricing, { timeFrame: '', price: '' }])}>+ Add Rate</button>
                 </div>
                 {pricing.map((p, i) => (
-  <div key={i} className="row g-2 mb-2">
-    {/* Price */}
-    <div className="col-6">
-      <input
-        placeholder="Price (₹)"
-        type="number"
-        className="form-control form-control-sm"
-        value={p.price}
-        onChange={e => setPricing(pricing.map((pr, idx) => idx === i ? { ...pr, price: e.target.value } : pr))}
-      />
-    </div>
+                  <div key={i} className="row g-2 mb-2">
+                    {/* Price */}
+                    <div className="col-6">
+                      <input
+                        placeholder="Price (₹)"
+                        type="number"
+                        className="form-control form-control-sm"
+                        value={p.price}
+                        onChange={e => setPricing(pricing.map((pr, idx) => idx === i ? { ...pr, price: e.target.value } : pr))}
+                      />
+                    </div>
 
-    {/* Time */}
-    <div className="col-4">
-      <input
-        placeholder="Time (e.g. 1 hr)"
-        className="form-control form-control-sm"
-        value={p.timeFrame}
-        onChange={e => setPricing(pricing.map((pr, idx) => idx === i ? { ...pr, timeFrame: e.target.value } : pr))}
-      />
-    </div>
+                    {/* Time */}
+                    <div className="col-4">
+                      <input
+                        placeholder="Time (e.g. 1 hr)"
+                        className="form-control form-control-sm"
+                        value={p.timeFrame}
+                        onChange={e => setPricing(pricing.map((pr, idx) => idx === i ? { ...pr, timeFrame: e.target.value } : pr))}
+                      />
+                    </div>
 
-    {/* Delete button */}
-    <div className="col-2">
-      <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => setPricing(pricing.filter((_, idx) => idx !== i))}>×</button>
-    </div>
-  </div>
-))}
+                    {/* Delete button */}
+                    <div className="col-2">
+                      <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => setPricing(pricing.filter((_, idx) => idx !== i))}>×</button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
