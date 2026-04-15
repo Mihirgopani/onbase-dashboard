@@ -81,7 +81,7 @@ const BookingDetails = () => {
         const isExpired = isJobExpired(item.jobDate, s);
 
         if (isExpired) return <span className="badge bg-soft-danger text-danger border-0 rounded-pill px-3 py-2">Expired</span>;
-        if (!item.assigned_worker) return <button onClick={() => navigate(`/bookings/${booking._id}/assign/${index}`)} className="btn btn-sm btn-outline-primary rounded-pill px-3">Assign Now</button>;
+        if (!item.assigned_worker) return <button onClick={() => navigate(`/bookings/${booking._id}/assign/${index}`)} className="btn btn-sm border bg-primary text-white px-3 my-3 mb-4">Assign Now</button>;
 
         if (s === 'assigned' && isTodayJobDate) {
             return (
