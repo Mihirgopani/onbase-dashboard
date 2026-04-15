@@ -87,14 +87,15 @@ const Login = () => {
                                                 </div>
                                             </div>
                                             <div>
-                                                <a href="javascript:void(0);" className="fs-11 text-primary">Forgot password?</a>
+                                                <a href="javascript:void(0);" className="fs-11" style={{ color:'#FF6F00'}}>Forgot password?</a>
                                             </div>
                                         </div>
                                         <div className="mt-5">
                                             <button 
                                                 type="submit" 
-                                                className="btn btn-lg btn-primary w-100" 
+                                                className="btn btn-lg w-100" 
                                                 disabled={loading}
+                                                style={{backgroundColor:'#FF6F00', color:'#fff'}}
                                             >
                                                 {loading ? 'Authenticating...' : 'Login'}
                                             </button>
@@ -109,9 +110,9 @@ const Login = () => {
                                     </div>
                                 </div>
                             </div>
-                            <div className="col-lg-6 bg-primary order-0 order-lg-1">
+                            <div className="col-lg-6  order-0 order-lg-1" style={{backgroundColor: '#FF6F00',}}>
                                 <div className="h-100 d-flex align-items-center justify-content-center">
-                                    <img src="/assets/images/login-banner.webp" alt="Auth" className="img-fluid" />
+                                    <img src="/assets/images/login-banner.png" alt="Auth" className="img-fluid" />
                                 </div>
                             </div>
                         </div>
